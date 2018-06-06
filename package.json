@@ -1,0 +1,14 @@
+{
+  "name": "Node",
+  "version": "1.0.0",
+  "main": "scrape.js",
+  "author": "nl253",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "fetch": "^1.1.0",
+    "natural": "^0.6.1",
+    "x-ray": "^2.3.2"
+  }
+}
