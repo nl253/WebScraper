@@ -7,16 +7,17 @@ const fetch = require('fetch').fetchUrl;
 const assert = require('assert');
 
 class Spider {
-
   /**
    * @param {string} start starting URL
    */
   constructor(start) {
-
     // not to be modified
-    this._queue = [start];
+    this.queue = [start];
     this.results = {};
-    this._startTime = new Date();
+    this.seen = new Set();
+    this.startTime = new Date();
+
+    this.errorLog = 'errors.log';
 
     // need to be filled before running
     this.selectors = [];
@@ -25,7 +26,7 @@ class Spider {
     // defautl values
     this.toScrape = 10;
     this.outputFile = 'results.json';
-    this._timeout = 60;
+    this.timeLimit = 60;
   }
 
   /**
@@ -45,6 +46,21 @@ class Spider {
    */
   get selector() {
     return this.selectors.join(', ');
+  }
+
+  /**
+   * Log an error msg to errorFile.
+   *
+   * For internal use.
+   *
+   * @param {string} msg
+   */
+  logError(msg) {
+    if (this.errorLog) {
+      fs.appendFile(this.errorLog, `${msg}\n`, console.log);
+    } else {
+      console.error(msg);
+    }
   }
 
   /**
@@ -70,22 +86,33 @@ class Spider {
   /**
    * How many results to collect.
    *
-   * @param {number} maxResults
+   * @param {number} limitResultsTo
    * @returns {Spider}
    */
-  limit(maxResults = 100) {
-    this.toScrape = maxResults;
+  limitResultsTo(max = 100) {
+    this.toScrape = max;
     return this;
   }
 
   /**
-   * How long to scrape for
+   * Where to log errors.
+   *
+   * @param {string} fileName
+   * @returns {Spider}
+   */
+  logErrorsTo(fileName = 'errors.log') {
+    this.errorLog = fileName;
+    return this;
+  }
+
+  /**
+   * How long to scrape for.
    *
    * @param {number} secs
    * @returns {Spider}
    */
-  timeout(secs = 30) {
-    this._timeout = secs;
+  limitTimeTo(secs = 30) {
+    this.timeLimit = secs;
     return this;
   }
 
@@ -95,7 +122,7 @@ class Spider {
    * @param {string} fileName
    * @returns {Spider}
    */
-  write(fileName = 'results.json') {
+  saveResultsTo(fileName = 'results.json') {
     this.outputFile = fileName;
     return this;
   }
@@ -107,95 +134,95 @@ class Spider {
    * @returns {boolean}
    */
   isFinished() {
-    if (this._queue.length <= 0) {
+    if (this.queue.length <= 0) {
       console.info('queue is empty, stopping');
       return true;
     } else if (this.toScrape <= 0) {
       console.info('scrape limit reached, stopping');
       return true;
-    } else if (((new Date() - this._startTime) / 1000) >= this._timeout) {
+    } else if (((new Date() - this.startTime) / 1000) >= this.timeLimit) {
       console.info('time limit reached, stopping');
       return true;
-    } return false;
-  }
-
-  _sanitiseResults() {
-    // clear redundant data
-    for (const url in this.results) {
-      for (const selector of this.selectors) {
-        if (this.results[url][selector].length === 0) {
-          /*
-           * wipe empty entries
-           * used to keep track of visitied sites
-           */
-          delete this.results[url][selector];
-        }
-      }
-      if (Object.values(this.results[url]).length === 0) {
-        delete this.results[url];
-      }
     }
+    return false;
   }
 
-  _saveResults() {
-    // write to specified (or default) file
-    fs.writeFile(this.outputFile, JSON.stringify(this.results), console.log);
+  /**
+   * Save collected results to specified (or default) output file.
+   */
+  saveResults() {
+    const output = JSON.stringify(this.results);
+
+    if (this.outputFile) {
+      // write to specified (or default) file
+      fs.writeFile(this.outputFile, output, console.log);
+    } else console.log(output);
   }
 
+  /**
+   * Begin web-scraping.
+   *
+   * @returns {Object} result
+   */
   run() {
     if (!this.isFinished()) {
-      const focusURL = this._queue.pop();
-      console.info(`[focus] ${focusURL}`);
+      const focusURL = this.queue.pop();
 
       // check if visitied before
-      if (focusURL in this.results) {
-        console.info(`[skipping] ${focusURL} (already visitied)`);
+      if (this.seen.has(focusURL)) {
+        this.logError(`[skipping] ${focusURL} (already visitied)`);
         return this.run();
       }
 
-      return fetch(focusURL, (err, meta, HTML) => {
+      return fetch(focusURL, {
+        outputEncoding: 'utf-8',
+        maxRedirects: 3,
+        timeout: 5 * 1000 // ms
+      }, (err, meta, HTML) => {
+        console.info(`[focus] ${focusURL}`);
+
+        this.seen.add(focusURL);
+
         if (err) {
-          console.error(err);
+          this.logError(err);
           return this.run();
         }
 
         // parse HTML
         const $ = cheerio.load(HTML);
 
-        // make a marker entry
-        this.results[focusURL] = {};
-
         for (const selector of this.selectors) {
-          // every selector has a list of findings
-          if (!this.results[focusURL][selector]) {
-            this.results[focusURL][selector] = [];
+
+          const thisSelectorResults = $(selector).text();
+
+          if (thisSelectorResults) {
+            if (!Object.keys(this.results).includes(focusURL)) {
+              this.results[focusURL] = {};
+            }
+            console.debug(`found results on ${focusURL}`);
+            this.results[focusURL][selector] = thisSelectorResults;
           }
-          $(selector).each((i, el) => {
-            this.results[focusURL][selector].push($(el).text());
-            this.toScrape--;
-          });
         }
 
-        // enqueue links
         $(this.followSelector).each((i, elem) => {
-          const resolved = url.resolve(focusURL, $(elem).attr('href'));
-          console.debug(`[adding] ${resolved}`);
-          this._queue.push(resolved);
+          let resolved = url.resolve(focusURL, $(elem).attr('href'));
+          if (!this.seen.has(resolved)) this.queue.push(resolved);
         });
 
         return this.run();
       });
     }
     // else
-    this._sanitiseResults();
-    this._saveResults();
+    this.saveResults();
+    this.seen.clear();
     return this.results;
   }
 }
 
-new Spider('https://www.indeed.co.uk/jobs?q=graduate+front+end+developer&start=10')
-  .select('#job_summary')
-  .follow('a.jobtitle.turnstileLink')
-  .limit(200)
-  .follow("a[href*='front+end+developer']")
+ 
+new Spider('https://www.jobsite.co.uk/jobs/javascript')
+  .select('p.job-intro.is-truncated')         
+  .follow("a[href*='page=']") // next page 
+  .limitResultsTo(500)
+  .limitTimeTo(120)
   .run();
