@@ -4,15 +4,37 @@ const cheerio = require('cheerio');
 const url = require('url');
 const fetch = require('node-fetch');
 
+/**
+ * Sleeps for sec seconds.
+ *
+ * @private
+ * @param {Number} sec
+ * @returns {Promise<*>}
+ */
 async function sleep(sec) {
   return new Promise(res => setTimeout(res, sec * 1000));
 }
 
+/**
+ * Constructs a path from parts.
+ *
+ * @private
+ * @param {...String} parts
+ * @returns {String}
+ */
 function rootPath(...parts) {
   return parts.reduce(
       (x, y) => path.join(x, y), path.resolve('.'));
 }
 
+/**
+ * Creates a function name based on variable name (v) and action name (f).
+ *
+ * @private
+ * @param f {String} action
+ * @param v {String} variable
+ * @returns {String} function name
+ */
 function functName(f, v) {
   return f + v.slice(0, 1).toUpperCase() + v.slice(1).replace(/s$/, '')
 }
@@ -123,10 +145,8 @@ class Spider {
   /**
    * Log an error msg to errorFile.
    *
-   * For internal use.
-   *
-   * @param {Object} msg
    * @private
+   * @param {Object} msg
    */
   _logErr(msg) {
     if (this._logErrStream) {
@@ -138,10 +158,8 @@ class Spider {
   /**
    * Log an error msg to errorFile.
    *
-   * For internal use.
-   *
-   * @param {Object} msg
    * @private
+   * @param {Object} msg
    */
   _logInfo(msg) {
     if (this._logInfoStream) {
@@ -154,8 +172,8 @@ class Spider {
    * Used to check if web-scraping should stop.
    * Emits useful message telling you what caused it to stop.
    *
-   * @returns {Promise<Boolean>} isFinished
    * @private
+   * @returns {Promise<Boolean>} isFinished
    */
   async _isFinished() {
 
@@ -188,6 +206,12 @@ class Spider {
     return waited >= maxWait;
   }
 
+  /**
+   * Worker used internally for scraping a single URL.
+   *
+   * @private
+   * @returns {Promise<void>}
+   */
   async _worker() {
     if (this.resultCount <= 0 || this.siteCount <= 0 || ((Date.now() - this._startTime) / 1000) >= this.timeLimit) {
       return;

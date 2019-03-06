@@ -22,9 +22,9 @@ const spiderOpts = {
   // Array<String>
   followSelectors: [], 
   // String
-  logErrFile: rootPath('errors.log'),
+  logErrFile: './errors.log',
   // String
-  logInfoFile: rootPath('log'),
+  logInfoFile: './log',
   // Integer
   redirFollowCount: 3,
   // Integer
@@ -67,37 +67,32 @@ crawler.setLogErrFile('msgs-err.log')
        .run(); 
 ```
 
+See export functions below to save results.
+
 ### Export Function
 
 Must be of type `(url: String, sel: String, txt: String) => Promise<*>`.
-See `./db.js` for an example which inserts every result into an SQLite database.
+There is an SQLite export function defined in `./exporting/sqlite` which you can import, initialise and register.
 
 **NOTE** Results will be in `./db`.         
 
-## Example
-
 ```js
-const Spider = require('./spider');
-const db = require('./db');
+const {Spider, exporting} = require('simple-webscraper');
 
 (async function() {
-  await db.sequelize.sync({force: true})
   const s = new Spider('https://www.jobsite.co.uk/jobs/javascript');
-  s.setExportFunct(async (url, sel, txt) => {
-    try {
-      return db.Result.create({txt, selector: sel, url});
-    } catch (e) {
-      console.error(e);
-    }
-  }).appendSelector(".job > .row > .col-sm-12")
-     // don't look for jobs in London, make sure they are graduate!
-    .setFilterFunct(txt => !!txt.match('raduate') && !txt.match('London'))
-     // next page 
-    .appendFollowSelector(".results-footer-links-container ul.pagination li a[href*='page=']") 
-     // stop after 3 websites (urls)
-    .setSiteCount(3)
-     // run for 30 sec
-    .setTimeLimit(30)
-    .run();
+  // doForce: Boolean, dbPath: String 
+  const sqliteExport = await exporting.sqlite(true, './db');
+  s.setExportFunct(sqliteExport)
+   .appendSelector(".job > .row > .col-sm-12")
+    // don't look for jobs in London, make sure they are graduate!
+   .setFilterFunct(txt => !!txt.match('raduate') && !txt.match('London'))
+    // next page 
+   .appendFollowSelector(".results-footer-links-container ul.pagination li a[href*='page=']") 
+    // stop after 3 websites (urls)
+   .setSiteCount(3)
+    // run for 30 sec
+   .setTimeLimit(30)
+   .run();
 })();
 ```
