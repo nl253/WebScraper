@@ -4,18 +4,40 @@ const cheerio = require('cheerio');
 const url = require('url');
 const fetch = require('node-fetch');
 
-module.exports = class Spider {
+async function sleep(sec) {
+  return new Promise(res => setTimeout(res, sec * 1000));
+}
+
+function rootPath(...parts) {
+  return parts.reduce(
+      (x, y) => path.join(x, y),
+      path.dirname(path.resolve(__filename)));
+}
+
+function functName(f, v) {
+  return f + v.slice(0, 1).toUpperCase() + v.slice(1).replace(/s$/, '')
+}
+
+class Spider {
   /**
    * @param {!String} start starting URL
    * @param {?Object} [opts]
+   * @param {!Function} [opts.exportFunct]
+   * @param {!Function} [opts.filterFunct]
+   * @param {!Array<String>} [opts.followSelectors]
+   * @param {!String} [opts.logErrFile]
+   * @param {!String} [opts.logInfoFile]
+   * @param {!Number} [opts.redirFollowCount]
+   * @param {!Number} [opts.respSecW8]
+   * @param {!Array<String>} [opts.selectors]
+   * @param {!Number} [opts.resultCount]
+   * @param {!Number} [opts.siteCount]
+   * @param {!Number} [opts.threadCount]
+   * @param {!Number} [opts.timeLimit]
    */
   constructor(start, opts = {}) {
-    if (!start) throw new Error('must give start URL');
-
-    function rootPath(...parts) {
-      return parts.reduce(
-        (x, y) => path.join(x, y), 
-        path.dirname(path.resolve(__filename))); 
+    if (!start) {
+      throw new Error('must give start URL');
     }
 
     const defaults = {
@@ -49,34 +71,30 @@ module.exports = class Spider {
       this._logErrStream = createWriteStream(this.logErrFile);
     }
 
-    function makeName(f, v) {
-      return f + v.slice(0, 1).toUpperCase() + v.slice(1).replace(/s$/, '')
-    }
-
     for (const k of Object.keys(defaults).filter(k => !k.startsWith('_')).filter(k => !!this[k])) {
-      const type = this[k] !== null 
-          ? this[k].constructor.name 
+      const type = this[k] !== null
+          ? this[k].constructor.name
           : 'null';
       if (type === 'Array') {
-        this[makeName('append', k)] =
+        this[functName('append', k)] =
           function (val) {
             this[k].push(val);
             return this;
           };
       } else if (type === 'Set') {
-        this[makeName('add', k)] =
+        this[functName('add', k)] =
           function (val) {
             this[k].add(val);
             return this;
           };
       } else if (['String', 'Number', 'RegExp', 'null', 'Function', 'AsyncFunction'].indexOf(type) >= 0) {
-        this[makeName('set', k)] =
+        this[functName('set', k)] =
           function (val) {
             this[k] = val;
             return this;
           };
       } else if (type === 'Object') {
-        this[makeName('set', k)] =
+        this[functName('set', k)] =
           function (key, val) {
             this[k][key] = val;
             return this;
@@ -146,11 +164,8 @@ module.exports = class Spider {
     const maxWait = 10;
 
     if (this._queue.length === 0 && this._jobs.length > 0) {
-      async function sleep(sec) {
-        return new Promise(res => setTimeout(res, sec * 1000));
-      }
       const start = Date.now();
-      while (this._queue.length === 0 && this._jobs.length > 0 && 
+      while (this._queue.length === 0 && this._jobs.length > 0 &&
              ((Date.now() - start) / 1000) <= maxWait) {
         await sleep(1);
         waited++;
@@ -246,9 +261,9 @@ module.exports = class Spider {
     while (!(await this._isFinished())) {
       if (this._jobs.length === this.threadCount) {
         await Promise.all(this._jobs);
-        this._jobs = []
+        this._jobs = [];
         continue;
-      } 
+      }
       try {
         this._jobs.push(this._worker());
       } catch (e) {
@@ -264,3 +279,5 @@ module.exports = class Spider {
     if (this._logInfoStream) this._logInfoStream.close();
   }
 };
+
+module.exports = Spider;

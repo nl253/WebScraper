@@ -1,0 +1,6 @@
+db
+.mypy_cache
+*.log
+log
+package-lock.json
+node_modules

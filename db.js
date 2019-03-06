@@ -15,8 +15,11 @@ const sequelize = new Sequelize('database', 'username', 'password', {
     acquire: 5000,
     evict: 3000,
   },
-})
+});
 
+/**
+ * @type {Model}
+ */
 const Result = sequelize.define('Result', {
   id: {
     primaryKey: true,
