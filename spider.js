@@ -242,9 +242,8 @@ class Spider {
         }
       });
 
-
-      this.siteCount--;
       await Promise.all(jobs);
+      this.siteCount--;
 
     } catch (e) {
       this._logErr(e);

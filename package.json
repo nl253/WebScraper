@@ -2,7 +2,19 @@
   "name": "simple-webscraper",
   "description": "Web scraping toolkit",
   "homepage": "https://github.com/nl253/WebScraper/blob/master/README.md",
+  "files": [
+    "example.js",
+    "db.js"
+  ],
+  "main": "spider.js",
+  "keywords": [
+    "async",
+    "webscrape",
+    "spider",
+    "scraper"
+  ],
   "version": "1.0.1",
+  "readme": "",
   "engines": {
     "node": ">=10"
   },
@@ -13,11 +25,10 @@
     "type": "git",
     "url": "https://github.com/nl253/WebScraper"
   },
-  "main": "index.js",
   "author": "Norbert Logiewa <norbertlogiewa96@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "node index.js",
+    "start": "node example.js",
     "run": "npm run start"
   },
   "private": false,
