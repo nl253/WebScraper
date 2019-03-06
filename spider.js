@@ -10,8 +10,7 @@ async function sleep(sec) {
 
 function rootPath(...parts) {
   return parts.reduce(
-      (x, y) => path.join(x, y),
-      path.dirname(path.resolve(__filename)));
+      (x, y) => path.join(x, y), path.resolve('.'));
 }
 
 function functName(f, v) {
@@ -277,6 +276,6 @@ class Spider {
     if (this._logErrStream) this._logErrStream.close();
     if (this._logInfoStream) this._logInfoStream.close();
   }
-};
+}
 
 module.exports = Spider;

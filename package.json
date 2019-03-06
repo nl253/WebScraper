@@ -4,16 +4,17 @@
   "homepage": "https://github.com/nl253/WebScraper/blob/master/README.md",
   "files": [
     "example.js",
+    "spider.js",
     "db.js"
   ],
-  "main": "spider.js",
+  "main": "index.js",
   "keywords": [
     "async",
     "webscrape",
     "spider",
     "scraper"
   ],
-  "version": "1.0.2",
+  "version": "1.1.0",
   "readme": "",
   "engines": {
     "node": ">=10"
@@ -28,8 +29,7 @@
   "author": "Norbert Logiewa <norbertlogiewa96@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "node example.js",
-    "run": "npm run start"
+    "example": "node example.js"
   },
   "private": false,
   "dependencies": {

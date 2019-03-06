@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
-const Spider = require('./spider');
-const db = require('./db');
+const {Spider, db} = require('simple-webscraper');
 
 (async function() {
-  await db.sequelize.sync({force: true})
+  await db.sequelize.sync({force: true});
   const s = new Spider('https://www.jobsite.co.uk/jobs/javascript');
   s.setExportFunct(async (url, sel, txt) => {
     try {

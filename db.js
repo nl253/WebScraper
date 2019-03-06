@@ -1,10 +1,12 @@
-const {join, dirname} = require('path');
 const Sequelize = require('sequelize');
 
+/**
+ * @type {Sequelize}
+ */
 const sequelize = new Sequelize('database', 'username', 'password', {
   dialect: 'sqlite',
   // - default ':memory:'
-  storage: join(dirname(__filename), 'db'),
+  storage: './db',
   // transactionType: Sequelize.Transaction.TYPES.IMMEDIATE,
   retry: {
     max: 10,
