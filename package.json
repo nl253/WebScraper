@@ -1,11 +1,20 @@
 {
   "name": "webscraper",
+  "description": "Web scraping toolkit",
+  "homepage": "https://github.com/nl253/WebScraper/blob/master/README.md",
   "version": "1.0.0",
   "engines": {
     "node": ">=10"
   },
+  "bugs": {
+    "url": "https://github.com/nl253/WebScraper/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nl253/WebScraper"
+  },
   "main": "index.js",
-  "author": "nl253",
+  "author": "Norbert Logiewa <norbertlogiewa96@gmail.com>",
   "license": "MIT",
   "scripts": {
     "start": "node index.js",
