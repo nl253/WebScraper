@@ -280,7 +280,7 @@ class Spider {
         }
       });
 
-      await Promise.all(jobs);
+      while (await jobs.pop()) {}
       this.siteCount--;
 
     } catch (e) {
@@ -297,8 +297,7 @@ class Spider {
 
     while (!(await this._isFinished())) {
       if (this._jobs.length === this.threadCount) {
-        await Promise.all(this._jobs);
-        this._jobs = [];
+        while (await this._jobs.pop()) {}
         continue;
       }
       try {
@@ -308,10 +307,9 @@ class Spider {
       }
     }
 
-    await Promise.all(this._jobs);
-
-    this._jobs = [];
+    while (await this._jobs.pop()) {}
     this._seen.clear();
+
     if (this._logErrStream) this._logErrStream.close();
     if (this._logInfoStream) this._logInfoStream.close();
   }
