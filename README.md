@@ -22,9 +22,9 @@ const spiderOpts = {
   // Array<String>
   followSelectors: [], 
   // String
-  logErrFile: './errors.log',
+  logErrFile: console,
   // String
-  logInfoFile: './log',
+  logInfoFile: console,
   // Integer
   redirFollowCount: 3,
   // Integer
@@ -51,8 +51,8 @@ crawler.run();
 ```js
 const startURL = "https://stackoverflow.com/questions/...";
 const crawler = new Spider(startURL);
-crawler.setLogErrFile('./msgs-err.log')
-       .setLogInfoFile('./msgs-info.log')
+crawler.setLogErrFile(console)
+       .setLogInfoFile(console)
        .setRespSecW8(20)
        .setRespSecW8(10)
        .appendSelector('p.info')

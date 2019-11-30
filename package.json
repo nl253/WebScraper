@@ -71,8 +71,7 @@
   "files": [
     "example.js",
     "spider.js",
-    "exporting/index.js",
-    "exporting/sqlite.js"
+    "exporting/*.js"
   ],
   "private": false,
   "scripts": {

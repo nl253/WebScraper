@@ -6,6 +6,8 @@ const fetch = require('node-fetch');
 
 const REGEX_URL = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
 
+const exporting = require('./exporting');
+
 /**
  * @private
  * @param {*} o
@@ -84,7 +86,7 @@ class Spider {
     this._seen = new Set();
     this._startTime = Date.now();
 
-    this.exportFunct = opts.exportFunct || (() => Promise.resolve(null));
+    this.exportFunct = opts.exportFunct || exporting.default;
     this.filterFunct = opts.filterFunct || ((txt) => true);
     this.followSelectors = opts.followSelectors || [];
     this.redirFollowCount = opts.redirFollowCount || 3;

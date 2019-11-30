@@ -1,9 +1,7 @@
-const fs = require('fs');
-const { promisify } = require('util');
+const { existsSync } = require('fs');
 
 const Sequelize = require('sequelize');
 
-const exists = promisify(fs.exists);
 
 let cacheDB;
 
@@ -54,14 +52,14 @@ const getResultTbl = (db) => cacheResultTbl === undefined ? db.define('Result', 
 }) : cacheResultTbl;
 
 /**
- * @param {Boolean} [doSync]
  * @param {String} [dbPath]
- * @returns {Promise<function(*, *, *): void>}
+ * @param {Boolean} [doSync]
+ * @returns {function(Boolean, String): function(String, String, String): Promise<void>}
  */
-module.exports = async function (doSync = false, dbPath = './db') {
+module.exports = async function (dbPath = './db', doSync = false) {
   const db = getDB(dbPath);
 
-  if (doSync || !(await exists(dbPath))) {
+  if (doSync || !existsSync(dbPath)) {
     await db.sync({ force: true });
   }
 
