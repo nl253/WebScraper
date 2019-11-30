@@ -63,9 +63,9 @@
     "license-checker": "^25.0.1",
     "retire": "^2.0.3"
   },
-  "main": "index.js",
+  "main": "./index.js",
   "directories": {
-    "doc": "docs",
+    "doc": "./docs",
     "lib": "./"
   },
   "files": [

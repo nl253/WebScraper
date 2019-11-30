@@ -4,9 +4,10 @@ const { createWriteStream } = require('fs');
 const cheerio = require('cheerio');
 const fetch = require('node-fetch');
 
-const REGEX_URL = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
-
 const exporting = require('./exporting');
+
+const REGEX_URL = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
+const SEC = 1000;
 
 /**
  * Sleeps for sec seconds.
@@ -15,7 +16,7 @@ const exporting = require('./exporting');
  * @param {Number} sec
  * @returns {Promise<void>}
  */
-const sleep = (sec) => new Promise((res, rej) => setTimeout(res, sec * 1000));
+const sleep = (sec) => new Promise((res, rej) => setTimeout(res, sec * SEC));
 
 class Spider {
   /**
