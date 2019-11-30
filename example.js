@@ -7,7 +7,6 @@ const {
 
 (async function () {
   const s = new Spider('https://www.jobsite.co.uk/jobs/javascript');
-  console.log(s);
   s.setExportFunct(await exporting.sqlite(true, './db'))
     .appendSelector(".job > .row > .col-sm-12")
     // don't look for jobs in London, make sure they are graduate!

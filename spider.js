@@ -97,8 +97,6 @@ class Spider {
     this.exportFunct = opts.exportFunct || (() => Promise.resolve(null));
     this.filterFunct = opts.filterFunct || ((txt) => true);
     this.followSelectors = opts.followSelectors || [];
-    this.logErrFile = opts.logErrFile || rootPath('errors.log');
-    this.logInfoFile = opts.logInfoFile || rootPath('log');
     this.redirFollowCount = opts.redirFollowCount || 3;
     this.respSecW8 = opts.respSecW8 || 10;
     this.selectors = opts.selectors || [];
@@ -107,8 +105,8 @@ class Spider {
     this.threadCount = opts.threadCount || 4;
     this.timeLimit = opts.timeLimit || 60;
 
-    if (this.logInfoFile) {
-      const logInfoStream = createWriteStream(this.logInfoFile);
+    if (opts.logInfoFile) {
+      const logInfoStream = createWriteStream(opts.logInfoFile);
       this._logInfo = (msg) => {
         logInfoStream.write('INFO ');
         logInfoStream.write(msg.toString());
@@ -118,8 +116,8 @@ class Spider {
       this._logInfo = console.info;
     }
 
-    if (this.logErrFile) {
-      const logErrStream = createWriteStream(this.logErrFile);
+    if (opts.logErrFile) {
+      const logErrStream = createWriteStream(opts.logErrFile);
       this._logErr = (msg) => {
         logErrStream.write('ERROR ');
         logErrStream.write(msg.toString());
@@ -242,19 +240,19 @@ class Spider {
 
     this._seen.add(focusURL);
     this._logInfo(`focus: ${focusURL}`);
-    const res = await fetch(focusURL, {
-      follow: this.redirFollowCount,
-      timeout: this.respSecW8 * 1000, // ms
-      headers: {
-        Accept: 'text/html',
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.98 Chrome/71.0.3578.98 Safari/537.36',
-        DNT: '1',
-      },
-    });
 
-    // parse HTML
     let $;
+
     try {
+      const res = await fetch(focusURL, {
+        follow: this.redirFollowCount,
+        timeout: this.respSecW8 * 1000, // ms
+        headers: {
+          Accept: 'text/html',
+          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.98 Chrome/71.0.3578.98 Safari/537.36',
+          DNT: '1',
+        },
+      });
       $ = cheerio.load(await res.text());
     } catch (e) {
       this._logErr(e.message || e.toString());
@@ -311,19 +309,12 @@ class Spider {
         while (await this._jobs.pop()) {}
         continue;
       }
-      try {
-        this._jobs.push(this._worker());
-      } catch (e) {
-        this._logErr(e);
-      }
+      this._jobs.push(this._worker());
     }
 
     // eslint-disable-next-line no-empty
     while (await this._jobs.pop()) {}
     this._seen.clear();
-
-    if (this._logErrStream) this._logErrStream.close();
-    if (this._logInfoStream) this._logInfoStream.close();
   }
 }
 
