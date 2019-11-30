@@ -5,6 +5,8 @@ const { createWriteStream } = require('fs');
 const cheerio = require('cheerio');
 const fetch = require('node-fetch');
 
+const REGEX_URL = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
+
 /**
  * @private
  * @param {*} o
@@ -238,55 +240,62 @@ class Spider {
       return;
     }
 
+    this._seen.add(focusURL);
+    this._logInfo(`focus: ${focusURL}`);
+    const res = await fetch(focusURL, {
+      follow: this.redirFollowCount,
+      timeout: this.respSecW8 * 1000, // ms
+      headers: {
+        Accept: 'text/html',
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.98 Chrome/71.0.3578.98 Safari/537.36',
+        DNT: '1',
+      },
+    });
+
+    // parse HTML
+    let $;
     try {
-      this._seen.add(focusURL);
-      this._logInfo(`focus: ${focusURL}`);
+      $ = cheerio.load(await res.text());
+    } catch (e) {
+      this._logErr(e.message || e.toString());
+      return;
+    }
 
-      const res = await fetch(focusURL, {
-        follow: this.redirFollowCount,
-        timeout: this.respSecW8 * 1000, // ms
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.98 Chrome/71.0.3578.98 Safari/537.36',
-        },
-      });
-
-      // parse HTML
-      const $ = cheerio.load(await res.text());
-
-      const jobs = [];
-
-      for (const sel of this.selectors) {
-        this._logInfo(`selecting: ${sel}`);
-
-        $(sel).each((idx, selResult) => {
+    const jobs = [];
+    for (const sel of this.selectors) {
+      this._logInfo(`selecting: ${sel}`);
+      $(sel).each((idx, selResult) => {
+        const txt = $(selResult)
+          .text()
+          .replace(this._sanitizeWSRegex, ' ')
+          .replace(this._sanitizeRegex, '')
+          .replace(this._sanitizeNLRegex, '\n');
+        if (this.filterFunct(txt)) {
           this._logInfo('found match');
-          const txt =  $(selResult).text()
-            .replace(this._sanitizeWSRegex, ' ')
-            .replace(this._sanitizeRegex, '')
-            .replace(this._sanitizeNLRegex, '\n');
-          if (this.filterFunct(txt)) {
-            jobs.push(this.exportFunct(focusURL, sel, txt));
-            this.resultCount--;
-          } else this._logInfo('filtered match');
-        });
-      }
-
-      $(this.followSelector).each((i, elem) => {
-        // eslint-disable-next-line node/no-deprecated-api
-        const resolved = url.resolve(focusURL, $(elem).attr('href'));
-        if (!this._seen.has(resolved)) {
-          console.log(`new url: ${resolved}`);
-          this._queue.push(resolved);
+          jobs.push(this.exportFunct(focusURL, sel, txt));
+          this.resultCount--;
+        } else {
+          this._logInfo('filtered match');
         }
       });
-
-      // eslint-disable-next-line no-empty
-      while (await jobs.pop()) {}
-      this.siteCount--;
-
-    } catch (e) {
-      this._logErr(e);
     }
+
+    $(this.followSelector).each((idx, elem) => {
+      // eslint-disable-next-line node/no-deprecated-api
+      const resolved = url.resolve(focusURL, $(elem).attr('href'));
+      if (!this._seen.has(resolved)) {
+        if (REGEX_URL.test(resolved)) {
+          this._logInfo(`new url: ${resolved}`);
+          this._queue.push(resolved);
+        } else {
+          this._logInfo(`resolved URL wasn't valid (${resolved})`);
+        }
+      }
+    });
+
+    // eslint-disable-next-line no-empty
+    while (await jobs.pop()) {}
+    this.siteCount--;
   }
 
   /**
@@ -297,7 +306,7 @@ class Spider {
     this._logInfo(`root URL: ${this._queue[0]}`);
 
     while (!(await this._isFinished())) {
-      if (this._jobs.length === this.threadCount) {
+      if (this._jobs.length >= this.threadCount) {
         // eslint-disable-next-line no-empty
         while (await this._jobs.pop()) {}
         continue;
