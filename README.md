@@ -22,9 +22,9 @@ const spiderOpts = {
   // Array<String>
   followSelectors: [], 
   // String
-  logErrFile: console,
+  logInfoFile: undefined, // logging goes to console
   // String
-  logInfoFile: console,
+  logInfoFile: undefined, // logging goes to console
   // Integer
   redirFollowCount: 3,
   // Integer
