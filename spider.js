@@ -105,13 +105,26 @@ class Spider {
     this.threadCount = opts.threadCount || 4;
     this.timeLimit = opts.timeLimit || 60;
 
-    // Object.assign(this, Object.assign(defaults, opts));
-
     if (this.logInfoFile) {
-      this._logInfoStream = createWriteStream(this.logInfoFile);
+      const logInfoStream = createWriteStream(this.logInfoFile);
+      this._logInfo = (msg) => {
+        logInfoStream.write('INFO ');
+        logInfoStream.write(msg.toString());
+        logInfoStream.write('\n');
+      };
+    } else {
+      this._logInfo = console.info;
     }
+
     if (this.logErrFile) {
-      this._logErrStream = createWriteStream(this.logErrFile);
+      const logErrStream = createWriteStream(this.logErrFile);
+      this._logErr = (msg) => {
+        logErrStream.write('ERROR ');
+        logErrStream.write(msg.toString());
+        logErrStream.write('\n');
+      };
+    } else {
+      this._logErr = console.error;
     }
 
     for (const k of Object.keys(this).filter((prop) => ['run', 'followSelector', 'selector'].indexOf(prop) < 0 && prop[0] !== '_' && this[prop])) {
@@ -164,32 +177,6 @@ class Spider {
    * @returns {String} followSelector
    */
   get followSelector() { return this.followSelectors.join(', '); }
-
-  /**
-   * Log an error msg to errorFile.
-   *
-   * @private
-   * @param {{toString: function(): String}} msg
-   */
-  _logErr(msg) {
-    if (this._logErrStream) {
-      this._logErrStream.write(msg.toString());
-      this._logErrStream.write('\n');
-    } else console.error(msg);
-  }
-
-  /**
-   * Log an error msg to errorFile.
-   *
-   * @private
-   * @param {{toString: function(): String}} msg
-   */
-  _logInfo(msg) {
-    if (this._logInfoStream) {
-      this._logInfoStream.write(msg.toString());
-      this._logInfoStream.write('\n');
-    } else console.info(msg);
-  }
 
   /**
    * Used to check if web-scraping should stop.
