@@ -280,6 +280,7 @@ class Spider {
         }
       });
 
+      // eslint-disable-next-line no-empty
       while (await jobs.pop()) {}
       this.siteCount--;
 
@@ -297,6 +298,7 @@ class Spider {
 
     while (!(await this._isFinished())) {
       if (this._jobs.length === this.threadCount) {
+        // eslint-disable-next-line no-empty
         while (await this._jobs.pop()) {}
         continue;
       }
@@ -307,6 +309,7 @@ class Spider {
       }
     }
 
+    // eslint-disable-next-line no-empty
     while (await this._jobs.pop()) {}
     this._seen.clear();
 
