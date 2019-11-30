@@ -1,19 +1,47 @@
-const {createWriteStream} = require('fs');
 const path = require('path');
-const cheerio = require('cheerio');
 const url = require('url');
+const {createWriteStream} = require('fs');
+
+const cheerio = require('cheerio');
 const fetch = require('node-fetch');
+
+/**
+ * @private
+ * @param {*} o
+ * @return {String}
+ */
+const getTypeName = o => o && o.constructor && o.constructor.name ? o.constructor.name : 'null';
+
+/**
+ * @private
+ * @param {*} o
+ * @param {String} type
+ * @return {Boolean}
+ */
+const checkType = (o, type) => getTypeName(o) === type;
+
+/**
+ * @private
+ * @param {*} o
+ * @return {Boolean}
+ */
+const isSet = o => checkType(o, 'Set');
+
+/**
+ * @private
+ * @param {*} o
+ * @return {Boolean}
+ */
+const isObject = o => checkType(o, 'Object');
 
 /**
  * Sleeps for sec seconds.
  *
  * @private
  * @param {Number} sec
- * @returns {Promise<*>}
+ * @returns {Promise<void>}
  */
-async function sleep(sec) {
-  return new Promise(res => setTimeout(res, sec * 1000));
-}
+const sleep = (sec) => new Promise((res, rej) => setTimeout(res, sec * 1000));
 
 /**
  * Constructs a path from parts.
@@ -22,22 +50,17 @@ async function sleep(sec) {
  * @param {...String} parts
  * @returns {String}
  */
-function rootPath(...parts) {
-  return parts.reduce(
-      (x, y) => path.join(x, y), path.resolve('.'));
-}
+const rootPath = (...parts) => parts.reduce((x, y) => path.join(x, y), path.resolve('.'));
 
 /**
  * Creates a function name based on variable name (v) and action name (f).
  *
- * @private
- * @param f {String} action
- * @param v {String} variable
+ * @param {String} f action
+ * @param {String} v variable
  * @returns {String} function name
+ * @private
  */
-function functName(f, v) {
-  return f + v.slice(0, 1).toUpperCase() + v.slice(1).replace(/s$/, '')
-}
+const functName = (f, v) => f + v.slice(0, 1).toUpperCase() + v.slice(1).replace(/s$/, '');
 
 class Spider {
   /**
@@ -62,14 +85,7 @@ class Spider {
     }
 
     const defaults = {
-      _jobs: [],
-      _queue: [start],
-      _sanitizeNLRegex: /\n{2,}/g,
-      _sanitizeRegex: /\s{2,}\n+|\n{2,}\s+/g,
-      _sanitizeWSRegex: /\s{2,}/g,
-      _seen: new Set(),
-      _startTime: Date.now(),
-      exportFunct: async (url, sel, txt) => null,
+      exportFunct: async (_url, sel, txt) => null,
       filterFunct: (txt) => true,
       followSelectors: [],
       logErrFile: rootPath('errors.log'),
@@ -81,9 +97,30 @@ class Spider {
       siteCount: 10, // #sites
       threadCount: 4,
       timeLimit: 60, // sec
-    };
+    } = opts;
 
-    Object.assign(this, Object.assign(defaults, opts));
+    this._jobs = [];
+    this._queue = [start];
+    this._sanitizeNLRegex = /\n{2,}/g;
+    this._sanitizeRegex = /\s{2,}\n+|\n{2,}\s+/g;
+    this._sanitizeWSRegex = /\s{2,}/g;
+    this._seen = new Set();
+    this._startTime = Date.now();
+
+    this.exportFunct = defaults.exportFunct;
+    this.filterFunct = defaults.filterFunct;
+    this.followSelectors = defaults.followSelectors;
+    this.logErrFile = defaults.logErrFile;
+    this.logInfoFile = defaults.logInfoFile;
+    this.redirFollowCount = defaults.redirFollowCount;
+    this.respSecW8 = defaults.respSecW8;
+    this.selectors = defaults.selectors;
+    this.resultCount = defaults.resultCount;
+    this.siteCount = defaults.siteCount;
+    this.threadCount = defaults.threadCount;
+    this.timeLimit = defaults.timeLimit;
+
+    // Object.assign(this, Object.assign(defaults, opts));
 
     if (this.logInfoFile) {
       this._logInfoStream = createWriteStream(this.logInfoFile);
@@ -92,34 +129,37 @@ class Spider {
       this._logErrStream = createWriteStream(this.logErrFile);
     }
 
-    for (const k of Object.keys(defaults).filter(k => !k.startsWith('_')).filter(k => !!this[k])) {
-      const type = this[k] !== null
-          ? this[k].constructor.name
-          : 'null';
-      if (type === 'Array') {
-        this[functName('append', k)] =
-          function (val) {
-            this[k].push(val);
-            return this;
-          };
-      } else if (type === 'Set') {
-        this[functName('add', k)] =
-          function (val) {
-            this[k].add(val);
-            return this;
-          };
-      } else if (['String', 'Number', 'RegExp', 'null', 'Function', 'AsyncFunction'].indexOf(type) >= 0) {
-        this[functName('set', k)] =
-          function (val) {
-            this[k] = val;
-            return this;
-          };
-      } else if (type === 'Object') {
-        this[functName('set', k)] =
-          function (key, val) {
-            this[k][key] = val;
-            return this;
-          };
+    for (const k of Object.keys(defaults).filter(k =>  k[0] !== '_' && this[k])) {
+      let f;
+      let fName;
+      if (Array.isArray(this[k])) {
+        fName = functName('append', k);
+        f = function (val) {
+          this[k].push(val);
+          return this;
+        };
+      } else if (isSet(this[k])) {
+        fName = functName('add', k);
+        f = function (val) {
+          this[k].add(val);
+          return this;
+        };
+      } else if (['String', 'Number', 'RegExp', 'null', 'Function', 'AsyncFunction'].indexOf(getTypeName(this[k])) >= 0) {
+        fName = functName('set', k);
+        f = function (val) {
+          this[k] = val;
+          return this;
+        };
+      } else if (isObject(this[k])) {
+        fName = functName('set', k);
+        f = function (key, val) {
+          this[k][key] = val;
+          return this;
+        };
+      }
+
+      if (fName !== undefined && f !== undefined) {
+        Object.defineProperty(this, fName, { get() { return f.bind(this); } });
       }
     }
   }
@@ -129,24 +169,20 @@ class Spider {
    *
    * @returns {String} selector
    */
-  get selector() {
-    return this.selectors.join(', ');
-  }
+  get selector() { return this.selectors.join(', '); }
 
   /**
    * Gets the joint follow selector.
    *
    * @returns {String} followSelector
    */
-  get followSelector() {
-    return this.followSelectors.join(', ');
-  }
+  get followSelector() { return this.followSelectors.join(', '); }
 
   /**
    * Log an error msg to errorFile.
    *
    * @private
-   * @param {Object} msg
+   * @param {{toString: function(): String}} msg
    */
   _logErr(msg) {
     if (this._logErrStream) {
@@ -159,7 +195,7 @@ class Spider {
    * Log an error msg to errorFile.
    *
    * @private
-   * @param {Object} msg
+   * @param {{toString: function(): String}} msg
    */
   _logInfo(msg) {
     if (this._logInfoStream) {
@@ -180,10 +216,12 @@ class Spider {
     let waited = 0;
     const maxWait = 10;
 
+    // at the beginning, sometimes, all workers will be dispatched
+    // and the queue becomes empty, but you don't want to end the program *yet*
+    // wait for them to parse HTML, extract links and add them to the queue
     if (this._queue.length === 0 && this._jobs.length > 0) {
       const start = Date.now();
-      while (this._queue.length === 0 && this._jobs.length > 0 &&
-             ((Date.now() - start) / 1000) <= maxWait) {
+      while (this._queue.length === 0 && this._jobs.length > 0 && ((Date.now() - start) / 1000) <= maxWait) {
         await sleep(1);
         waited++;
       }
@@ -218,9 +256,9 @@ class Spider {
     }
     const focusURL = this._queue.pop();
 
-    // check if visitied before
+    // check if visited before
     if (this._seen.has(focusURL)) {
-      this._logInfo(`skipping: ${focusURL} (already visitied)`);
+      this._logInfo(`skipping: ${focusURL} (already visited)`);
       return;
     }
 

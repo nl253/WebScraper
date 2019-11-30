@@ -1,41 +1,85 @@
 {
   "name": "simple-webscraper",
+  "version": "1.2.1",
   "description": "Web scraping toolkit",
+  "readme": "https://github.com/nl253/WebScraper/blob/master/README.md",
   "homepage": "https://github.com/nl253/WebScraper/blob/master/README.md",
-  "files": [
-    "example.js",
-    "spider.js",
-    "exporting/sqlite.js"
-  ],
-  "main": "index.js",
   "keywords": [
+    "http",
     "async",
     "webscrape",
+    "webscraper",
     "spider",
-    "scraper"
+    "scraper",
+    "scrape"
   ],
-  "version": "1.2.1",
-  "readme": "",
-  "engines": {
-    "node": ">=10"
-  },
-  "bugs": {
-    "url": "https://github.com/nl253/WebScraper/issues"
-  },
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/nl253/WebScraper"
   },
-  "author": "Norbert Logiewa <norbertlogiewa96@gmail.com>",
-  "license": "MIT",
-  "scripts": {
-    "example": "node example.js"
+  "bugs": {
+    "url": "https://github.com/nl253/WebScraper/issues"
   },
-  "private": false,
+  "author": "Norbert Logiewa <norbertlogiewa96@gmail.com>",
+  "maintainers": [
+    {
+      "email": "norbertlogiewa96@gmail.com",
+      "name": "Norbert Logiewa"
+    }
+  ],
+  "contributors": [
+    {
+      "email": "norbertlogiewa96@gmail.com",
+      "name": "Norber Logiewa",
+      "url": "https://github.com/nl253"
+    }
+  ],
+  "engines": {
+    "node": ">=10.15.1"
+  },
+  "engineStrict": true,
+  "browserslist": [],
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
     "node-fetch": "^2.3.0",
     "sequelize": "^4.43.0",
     "sqlite3": "^4.0.6"
+  },
+  "devDependencies": {
+    "eslint": "^6.7.1",
+    "eslint-config-airbnb": "^18.0.1",
+    "eslint-plugin-compat": "^3.3.0",
+    "eslint-plugin-filenames": "^1.3.2",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-optimize-regex": "^1.1.7",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-react": "^7.17.0",
+    "eslint-plugin-security": "^1.4.0",
+    "jest": "^24.9.0",
+    "jsdoc": "3.6.3",
+    "license-checker": "^25.0.1",
+    "retire": "^2.0.3"
+  },
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "./"
+  },
+  "files": [
+    "example.js",
+    "spider.js",
+    "exporting/sqlite.js"
+  ],
+  "private": false,
+  "scripts": {
+    "example": "node example.js",
+    "test": "npx jest",
+    "doc": "echo -e 'PUBLISHING DOCS\\n' && rm -rf out docs && npx jsdoc -R README.md Column.js DataFrame.js opts.js presets.js && mv out docs && git add ./docs && git commit -am 'Update docs' -n && npm version patch && git push",
+    "loc": "tokei -- $(git ls-files | grep -E '\\.js$' | grep -v docs | grep -v bin)",
+    "lint": "npx eslint *.js",
+    "prepublishOnly": "npm run doc"
   }
 }

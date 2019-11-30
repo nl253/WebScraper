@@ -51,8 +51,8 @@ crawler.run();
 ```js
 const startURL = "https://stackoverflow.com/questions/...";
 const crawler = new Spider(startURL);
-crawler.setLogErrFile('msgs-err.log')
-       .setLogInfoFile('msgs-info.log')
+crawler.setLogErrFile('./msgs-err.log')
+       .setLogInfoFile('./msgs-info.log')
        .setRespSecW8(20)
        .setRespSecW8(10)
        .appendSelector('p.info')
