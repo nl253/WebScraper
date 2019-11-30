@@ -9,35 +9,6 @@ const REGEX_URL = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9(
 const exporting = require('./exporting');
 
 /**
- * @private
- * @param {*} o
- * @returns {String}
- */
-const getTypeName = (o) => o && o.constructor && o.constructor.name ? o.constructor.name : 'null';
-
-/**
- * @private
- * @param {*} o
- * @param {String} type
- * @returns {Boolean}
- */
-const checkType = (o, type) => getTypeName(o) === type;
-
-/**
- * @private
- * @param {*} o
- * @returns {Boolean}
- */
-const isSet = (o) => checkType(o, 'Set');
-
-/**
- * @private
- * @param {*} o
- * @returns {Boolean}
- */
-const isObject = (o) => checkType(o, 'Object');
-
-/**
  * Sleeps for sec seconds.
  *
  * @private
@@ -45,16 +16,6 @@ const isObject = (o) => checkType(o, 'Object');
  * @returns {Promise<void>}
  */
 const sleep = (sec) => new Promise((res, rej) => setTimeout(res, sec * 1000));
-
-/**
- * Creates a function name based on variable name (v) and action name (f).
- *
- * @param {String} f action
- * @param {String} v variable
- * @returns {String} function name
- * @private
- */
-const functName = (f, v) => f + v.slice(0, 1).toUpperCase() + v.slice(1).replace(/s$/, '');
 
 class Spider {
   /**
@@ -97,63 +58,143 @@ class Spider {
     this.threadCount = opts.threadCount || 4;
     this.timeLimit = opts.timeLimit || 60;
 
-    if (opts.logInfoFile) {
-      const logInfoStream = createWriteStream(opts.logInfoFile);
-      this._logInfo = (msg) => {
-        logInfoStream.write('INFO ');
-        logInfoStream.write(msg.toString());
-        logInfoStream.write('\n');
-      };
+    this._logInfo = this._initLogToFile(opts.logInfoFile, 'info');
+    this._logErr = this._initLogToFile(opts.logErrFile, 'error');
+  }
+
+  /**
+   * @param {Number} n
+   * @returns {Spider}
+   */
+  setTimeLimit(n) { return this._set('timeLimit', n); }
+
+  /**
+   * @param {Number} n
+   * @returns {Spider}
+   */
+  setRedirFollowCount(n) { return this._set('redirFollowCount', n); }
+
+  /**
+   * @param {Number} n
+   * @returns {Spider}
+   */
+  setRespSecW8(n) { return this._set('respSecW8', n); }
+
+  /**
+   * @param {Number} n
+   * @returns {Spider}
+   */
+  setResultCount(n) { return this._set('resultCount', n); }
+
+  /**
+   * @param {Number} n
+   * @returns {Spider}
+   */
+  setSiteCount(n) { return this._set('siteCount', n); }
+
+  /**
+   * @param {Number} n
+   * @returns {Spider}
+   */
+  setThreadCount(n) { return this._set('threadCount', n); }
+
+  /**
+   * @param {function(String, String, String): Promise<void>} f
+   * @returns {Spider}
+   */
+  setExportFunct(f) { return this._set('exportFunct', f); }
+
+  /**
+   * @param {function(String): Boolean} f
+   * @returns {Spider}
+   */
+  setFilterFunct(f) { return this._set('filterFunct', f); }
+
+  /**
+   * @param {String} s
+   * @returns {Spider}
+   */
+  appendSelector(s) { return this._append('selectors', s); }
+
+  /**
+   * @param {String|String[]} s
+   * @returns {Spider}
+   */
+  setSelector(s) {
+    if (Array.isArray(s)) {
+      return this._set('selector', s);
     } else {
-      this._logInfo = console.info;
+      return this.setSelector([s]);
     }
+  }
 
-    if (opts.logErrFile) {
-      const logErrStream = createWriteStream(opts.logErrFile);
-      this._logErr = (msg) => {
-        logErrStream.write('ERROR ');
-        logErrStream.write(msg.toString());
-        logErrStream.write('\n');
-      };
-    } else {
-      this._logErr = console.error;
-    }
+  /**
+   * @param {String} s
+   * @returns {Spider}
+   */
+  appendFollowSelector(s) { return this._append('followSelectors', s); }
 
-    for (const k of Object.keys(this).filter((prop) => ['run', 'followSelector', 'selector'].indexOf(prop) < 0 && prop[0] !== '_' && this[prop])) {
-      let f;
-      let fName;
-      if (Array.isArray(this[k])) {
-        fName = functName('append', k);
-        f = function (val) {
-          this[k].push(val);
-          return this;
-        };
-      } else if (isSet(this[k])) {
-        fName = functName('add', k);
-        f = function (val) {
-          this[k].add(val);
-          return this;
-        };
-      } else if ([
-        'String', 'Number', 'RegExp', 'null', 'Function', 'AsyncFunction'
-      ].indexOf(getTypeName(this[k])) >= 0) {
-        fName = functName('set', k);
-        f = function (val) {
-          this[k] = val;
-          return this;
-        };
-      } else if (isObject(this[k])) {
-        fName = functName('set', k);
-        f = function (key, val) {
-          this[k][key] = val;
-          return this;
-        };
-      }
+  /**
+   * @param {String|String[]} s
+   * @returns {Spider}
+   */
+  setFollowSelector(s) { return this._set('followSelectors', Array.isArray(s) ? s : [s]); }
 
-      if (fName !== undefined && f !== undefined) {
-        Object.defineProperty(this, fName, { get() { return f.bind(this); } });
-      }
-    }
+  /**
+   * @param {String} fName
+   * @returns {Spider}
+   */
+  setLogInfoFile(fName) {
+    this._logInfo = this._initLogToFile(fName, 'info');
+    return this;
+  }
+
+  /**
+   * @param {String} fName
+   * @returns {Spider}
+   */
+  setLogErrFile(fName) {
+    this._logErr = this._initLogToFile(fName, 'error');
+    return this;
+  }
+
+  /**
+   * @param {?String} fName
+   * @param {'info'|'error'} lvl
+   * @returns {function(...String): void}
+   * @private
+   */
+  _initLogToFile(fName, lvl = 'info') {
+    if (!fName) return console[lvl];
+    const stream = createWriteStream(fName);
+    return (msg) => {
+      stream.write(lvl.toUpperCase());
+      stream.write(' ');
+      stream.write(msg.toString());
+      stream.write('\n');
+    };
+  }
+
+  /**
+   * @param {String} prop
+   * @param {*} val
+   * @returns {Spider}
+   * @private
+   */
+  _set(prop, val) {
+    this[prop] = val;
+    return this;
+  }
+
+  /**
+   * @param {String} prop
+   * @param {*} val
+   * @returns {Spider}
+   * @private
+   */
+  _append(prop, val) {
+    this[prop].push(val);
+    return this;
   }
 
   /**
