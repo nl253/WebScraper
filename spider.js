@@ -1,11 +1,10 @@
-const path = require('path');
 const url = require('url');
 const { createWriteStream } = require('fs');
 
 const cheerio = require('cheerio');
 const fetch = require('node-fetch');
 
-const REGEX_URL = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
+const REGEX_URL = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
 
 /**
  * @private
@@ -44,15 +43,6 @@ const isObject = (o) => checkType(o, 'Object');
  * @returns {Promise<void>}
  */
 const sleep = (sec) => new Promise((res, rej) => setTimeout(res, sec * 1000));
-
-/**
- * Constructs a path from parts.
- *
- * @private
- * @param {...String} parts
- * @returns {String}
- */
-const rootPath = (...parts) => parts.reduce((x, y) => path.join(x, y), path.resolve('.'));
 
 /**
  * Creates a function name based on variable name (v) and action name (f).

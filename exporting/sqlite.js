@@ -60,11 +60,12 @@ const getResultTbl = (db) => cacheResultTbl === undefined ? db.define('Result', 
  */
 module.exports = async function (doSync = false, dbPath = './db') {
   const db = getDB(dbPath);
-  const ResultTbl = getResultTbl(db);
 
   if (doSync || !(await exists(dbPath))) {
     await db.sync({ force: true });
   }
+
+  const ResultTbl = getResultTbl(db);
 
   return (url, sel, txt) => ResultTbl.create({ txt, selector: sel, url });
 };
