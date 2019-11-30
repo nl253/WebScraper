@@ -16,7 +16,7 @@
 // DEFAULT init options
 const spiderOpts = {
   // Function<String, String, String, Promise>
-  exportFunct: async (url, sel, txt) => null,
+  exportFunct: exports.combine(exports.console(), exports.sqlite()),
   // predicate i.e. Function<String, Boolean>
   filterFunct: (txt) => true, 
   // Array<String>
@@ -63,7 +63,8 @@ crawler.setLogErrFile(console)
        .setTimeLimit(120) // sec
        .setThreadCount(8)
        .setSiteCount(100) // distinct URLs
-       // run returns void, you need to prodive an export function for each result (see below)
+       // run returns void, you might want to provide an export function for each result (see below)
+       // by default goes to sqlite ./db and prints to console
        .run(); 
 ```
 
@@ -77,12 +78,13 @@ There is an SQLite export function defined in `./exporting/sqlite` which you can
 **NOTE** Results will be in `./db`.         
 
 ```js
-const {Spider, exporting} = require('simple-webscraper');
+const { Spider, exporting } = require('simple-webscraper');
 
 (async function() {
   const s = new Spider('https://www.jobsite.co.uk/jobs/javascript');
-  // doForce: Boolean, dbPath: String 
-  const sqliteExport = await exporting.sqlite(true, './db');
+
+  const sqliteExport = await exporting.sqlite('./db', true /* force wipe if exists */);
+
   s.setExportFunct(sqliteExport)
    .appendSelector(".job > .row > .col-sm-12")
     // don't look for jobs in London, make sure they are graduate!

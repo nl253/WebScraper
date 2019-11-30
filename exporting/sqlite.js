@@ -2,7 +2,6 @@ const { existsSync } = require('fs');
 
 const Sequelize = require('sequelize');
 
-
 let cacheDB;
 
 /**
