@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+/* eslint-disable */
 
 const {
   Spider,
@@ -6,9 +6,8 @@ const {
 } = require('simple-webscraper');
 
 (async function () {
-  const sqliteExport = await exporting.sqlite(true, './db');
   const s = new Spider('https://www.jobsite.co.uk/jobs/javascript');
-  s.setExportFunct(sqliteExport)
+  s.setExportFunct(await exporting.sqlite(true, './db'))
     .appendSelector(".job > .row > .col-sm-12")
     // don't look for jobs in London, make sure they are graduate!
     // .setFilterFunct(txt => !!txt.match('raduate') && !txt.match('London'))
