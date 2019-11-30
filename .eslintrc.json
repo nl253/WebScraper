@@ -40,7 +40,7 @@
       "impliedStrict": true,
       "jsx": true
     },
-    "ecmaVersion": 10,
+    "ecmaVersion": 8,
     "sourceType": "module"
   },
   "plugins": [
@@ -106,7 +106,7 @@
     ],
     "dot-notation": 1,
     "eol-last": 2,
-    "filenames/match-exported": 2,
+    "filenames/match-exported": 1,
     "filenames/no-index": 0,
     "for-direction": 2,
     "func-name-matching": 1,
@@ -386,6 +386,7 @@
     "prefer-destructuring": [1, {"object":  true, "array":  false}],
     "prefer-numeric-literals": 1,
     "prefer-promise-reject-errors": 2,
+    "promise/param-names": 1,
     "prefer-rest-params": 1,
     "prefer-spread": 1,
     "prefer-template": 1,

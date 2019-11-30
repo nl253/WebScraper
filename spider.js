@@ -1,6 +1,6 @@
 const path = require('path');
 const url = require('url');
-const {createWriteStream} = require('fs');
+const { createWriteStream } = require('fs');
 
 const cheerio = require('cheerio');
 const fetch = require('node-fetch');
@@ -8,31 +8,31 @@ const fetch = require('node-fetch');
 /**
  * @private
  * @param {*} o
- * @return {String}
+ * @returns {String}
  */
-const getTypeName = o => o && o.constructor && o.constructor.name ? o.constructor.name : 'null';
+const getTypeName = (o) => o && o.constructor && o.constructor.name ? o.constructor.name : 'null';
 
 /**
  * @private
  * @param {*} o
  * @param {String} type
- * @return {Boolean}
+ * @returns {Boolean}
  */
 const checkType = (o, type) => getTypeName(o) === type;
 
 /**
  * @private
  * @param {*} o
- * @return {Boolean}
+ * @returns {Boolean}
  */
-const isSet = o => checkType(o, 'Set');
+const isSet = (o) => checkType(o, 'Set');
 
 /**
  * @private
  * @param {*} o
- * @return {Boolean}
+ * @returns {Boolean}
  */
-const isObject = o => checkType(o, 'Object');
+const isObject = (o) => checkType(o, 'Object');
 
 /**
  * Sleeps for sec seconds.
@@ -84,21 +84,6 @@ class Spider {
       throw new Error('must give start URL');
     }
 
-    const defaults = {
-      exportFunct: async (_url, sel, txt) => null,
-      filterFunct: (txt) => true,
-      followSelectors: [],
-      logErrFile: rootPath('errors.log'),
-      logInfoFile: rootPath('log'),
-      redirFollowCount: 3,
-      respSecW8: 10,
-      selectors: [],
-      resultCount: 100,
-      siteCount: 10, // #sites
-      threadCount: 4,
-      timeLimit: 60, // sec
-    } = opts;
-
     this._jobs = [];
     this._queue = [start];
     this._sanitizeNLRegex = /\n{2,}/g;
@@ -107,18 +92,18 @@ class Spider {
     this._seen = new Set();
     this._startTime = Date.now();
 
-    this.exportFunct = defaults.exportFunct;
-    this.filterFunct = defaults.filterFunct;
-    this.followSelectors = defaults.followSelectors;
-    this.logErrFile = defaults.logErrFile;
-    this.logInfoFile = defaults.logInfoFile;
-    this.redirFollowCount = defaults.redirFollowCount;
-    this.respSecW8 = defaults.respSecW8;
-    this.selectors = defaults.selectors;
-    this.resultCount = defaults.resultCount;
-    this.siteCount = defaults.siteCount;
-    this.threadCount = defaults.threadCount;
-    this.timeLimit = defaults.timeLimit;
+    this.exportFunct = opts.exportFunct || (() => Promise.resolve(null));
+    this.filterFunct = opts.filterFunct || ((txt) => true);
+    this.followSelectors = opts.followSelectors || [];
+    this.logErrFile = opts.logErrFile || rootPath('errors.log');
+    this.logInfoFile = opts.logInfoFile || rootPath('log');
+    this.redirFollowCount = opts.redirFollowCount || 3;
+    this.respSecW8 = opts.respSecW8 || 10;
+    this.selectors = opts.selectors || [];
+    this.resultCount = opts.resultCount || 100;
+    this.siteCount = opts.siteCount || 10;
+    this.threadCount = opts.threadCount || 4;
+    this.timeLimit = opts.timeLimit || 60;
 
     // Object.assign(this, Object.assign(defaults, opts));
 
@@ -129,7 +114,7 @@ class Spider {
       this._logErrStream = createWriteStream(this.logErrFile);
     }
 
-    for (const k of Object.keys(defaults).filter(k =>  k[0] !== '_' && this[k])) {
+    for (const k of Object.keys(this).filter((prop) => ['run', 'followSelector', 'selector'].indexOf(prop) < 0 && prop[0] !== '_' && this[prop])) {
       let f;
       let fName;
       if (Array.isArray(this[k])) {
@@ -144,7 +129,9 @@ class Spider {
           this[k].add(val);
           return this;
         };
-      } else if (['String', 'Number', 'RegExp', 'null', 'Function', 'AsyncFunction'].indexOf(getTypeName(this[k])) >= 0) {
+      } else if ([
+        'String', 'Number', 'RegExp', 'null', 'Function', 'AsyncFunction'
+      ].indexOf(getTypeName(this[k])) >= 0) {
         fName = functName('set', k);
         f = function (val) {
           this[k] = val;
@@ -216,9 +203,11 @@ class Spider {
     let waited = 0;
     const maxWait = 10;
 
-    // at the beginning, sometimes, all workers will be dispatched
-    // and the queue becomes empty, but you don't want to end the program *yet*
-    // wait for them to parse HTML, extract links and add them to the queue
+    /*
+     * at the beginning, sometimes, all workers will be dispatched
+     * and the queue becomes empty, but you don't want to end the program *yet*
+     * wait for them to parse HTML, extract links and add them to the queue
+     */
     if (this._queue.length === 0 && this._jobs.length > 0) {
       const start = Date.now();
       while (this._queue.length === 0 && this._jobs.length > 0 && ((Date.now() - start) / 1000) <= maxWait) {
@@ -282,7 +271,7 @@ class Spider {
       for (const sel of this.selectors) {
         this._logInfo(`selecting: ${sel}`);
 
-        $(sel).each(async (idx, selResult) => {
+        $(sel).each((idx, selResult) => {
           this._logInfo('found match');
           const txt =  $(selResult).text()
             .replace(this._sanitizeWSRegex, ' ')
@@ -296,6 +285,7 @@ class Spider {
       }
 
       $(this.followSelector).each((i, elem) => {
+        // eslint-disable-next-line node/no-deprecated-api
         const resolved = url.resolve(focusURL, $(elem).attr('href'));
         if (!this._seen.has(resolved)) {
           console.log(`new url: ${resolved}`);
