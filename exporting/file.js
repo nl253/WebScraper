@@ -1,14 +1,23 @@
-const { createWriteStream } = require('fs');
-const { format } = require('util');
+const fs = require('fs');
+
+const consoleExport = require('./console');
+
+/**
+ * @param {String} uri
+ * @param {String} selector
+ * @param {String} text
+ * @returns {String}
+ */
+const csvFmt = (uri, selector, text) => `"${uri.replace(/"/g, "'")}","${selector.replace(/"/g, "'")}","${text.replace(/"/g, "'")}"\n`;
 
 /**
  * @param {String} [filePath]
- * @param {String} [fmt]
- * @param {{}} [opts]
- * @returns {function(String, String, Object): function(String, String, String): Promise<void>}
+ * @param {String|function(String, String, String): String} [fmt]
+ * @param {*} [opts]
+ * @returns {function(String, String, String): Promise<void>}
  */
-module.exports = (filePath = 'web-scraping-results.console', fmt = '%s %s %s\n', opts = {}) => {
-  const stream = createWriteStream(filePath, opts);
-  // eslint-disable-next-line require-await
-  return async (url, sel, txt) => stream.write(format(fmt, url, sel, txt));
+module.exports = (filePath, fmt = csvFmt, opts = {}) => {
+  const p = filePath || (`results-${new Date().toISOString().replace(/\W+/g, '-')}.csv`);
+  const file = fs.createWriteStream(p);
+  return consoleExport(fmt, (msg) => file.write(msg));
 };

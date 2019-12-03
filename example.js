@@ -10,7 +10,7 @@ const {
     const s = new Spider('https://www.jobsite.co.uk/jobs/javascript');
     s.appendSelector(".job > .row > .col-sm-12")
       // don't look for jobs in London, make sure they are graduate!
-      // .setFilterFunct(txt => !!txt.match('raduate') && !txt.match('London'))
+      // .setFilterFunct(text => !!text.match('raduate') && !text.match('London'))
       // stop after 3 websites
       .setSiteCount(3)
       // next page

@@ -6,7 +6,7 @@ const fetch = require('node-fetch');
 
 const exporting = require('./exporting');
 
-const REGEX_URL = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
+const REGEX_URI = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
 const SEC = 1000;
 
 /**
@@ -20,7 +20,7 @@ const sleep = (sec) => new Promise((res, rej) => setTimeout(res, sec * SEC));
 
 class Spider {
   /**
-   * @param {!String} start starting URL
+   * @param {!String} start starting URI
    * @param {?Object} [opts]
    * @param {!Function} [opts.exportFunct]
    * @param {!Function} [opts.filterFunct]
@@ -37,7 +37,7 @@ class Spider {
    */
   constructor(start, opts = {}) {
     if (!start) {
-      throw new Error('must give start URL');
+      throw new Error('must give start URI');
     }
 
     this._jobs = [];
@@ -49,7 +49,7 @@ class Spider {
     this._startTime = Date.now();
 
     this.exportFunct = opts.exportFunct || exporting.default;
-    this.filterFunct = opts.filterFunct || ((txt) => true);
+    this.filterFunct = opts.filterFunct || ((text) => true);
     this.followSelectors = opts.followSelectors || [];
     this.redirFollowCount = opts.redirFollowCount || 3;
     this.respSecW8 = opts.respSecW8 || 10;
@@ -103,7 +103,7 @@ class Spider {
    * @param {function(String, String, String): Promise<void>} f
    * @returns {Spider}
    */
-  setExportFunct(f) { return this._set('exportFunct', f); }
+  setExportFunct(f) { return this._set('URI', f); }
 
   /**
    * @param {function(String): Boolean} f
@@ -166,7 +166,9 @@ class Spider {
    * @private
    */
   _initLogToFile(fName, lvl = 'info') {
-    if (!fName) return console[lvl];
+    if (!fName) {
+      return this._initLogToFile(`log-${new Date().toISOString().replace(/\W+/g, '-')}.log`);
+    }
     const stream = createWriteStream(fName);
     return (msg) => {
       stream.write(lvl.toUpperCase());
@@ -231,7 +233,7 @@ class Spider {
      */
     if (this._queue.length === 0 && this._jobs.length > 0) {
       const start = Date.now();
-      while (this._queue.length === 0 && this._jobs.length > 0 && ((Date.now() - start) / 1000) <= maxWait) {
+      while (this._queue.length === 0 && this._jobs.length > 0 && ((Date.now() - start) / SEC) <= maxWait) {
         await sleep(1);
         waited++;
       }
@@ -246,7 +248,7 @@ class Spider {
     } else if (this.resultCount <= 0) {
       this._logInfo('scrape limit reached, stopping');
       return true;
-    } else if (((Date.now() - this._startTime) / 1000) >= this.timeLimit) {
+    } else if (((Date.now() - this._startTime) / SEC) >= this.timeLimit) {
       this._logInfo('time limit reached, stopping');
       return true;
     }
@@ -255,32 +257,32 @@ class Spider {
   }
 
   /**
-   * Worker used internally for scraping a single URL.
+   * Worker used internally for scraping a single URI
    *
    * @private
    * @returns {Promise<void>}
    */
   async _worker() {
-    if (this.resultCount <= 0 || this.siteCount <= 0 || ((Date.now() - this._startTime) / 1000) >= this.timeLimit) {
+    if (this.resultCount <= 0 || this.siteCount <= 0 || ((Date.now() - this._startTime) / SEC) >= this.timeLimit) {
       return;
     }
-    const focusURL = this._queue.pop();
+    const focusURI = this._queue.pop();
 
     // check if visited before
-    if (this._seen.has(focusURL)) {
-      this._logInfo(`skipping: ${focusURL} (already visited)`);
+    if (this._seen.has(focusURI)) {
+      this._logInfo(`skipping: ${focusURI} (already visited)`);
       return;
     }
 
-    this._seen.add(focusURL);
-    this._logInfo(`focus: ${focusURL}`);
+    this._seen.add(focusURI);
+    this._logInfo(`focus: ${focusURI}`);
 
     let $;
 
     try {
-      const res = await fetch(focusURL, {
+      const res = await fetch(focusURI, {
         follow: this.redirFollowCount,
-        timeout: this.respSecW8 * 1000, // ms
+        timeout: this.respSecW8 * SEC, // ms
         headers: {
           Accept: 'text/html',
           'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.98 Chrome/71.0.3578.98 Safari/537.36',
@@ -294,17 +296,17 @@ class Spider {
     }
 
     const jobs = [];
-    for (const sel of this.selectors) {
-      this._logInfo(`selecting: ${sel}`);
-      $(sel).each((idx, selResult) => {
-        const txt = $(selResult)
+    for (const selector of this.selectors) {
+      this._logInfo(`selecting: ${selector}`);
+      $(selector).each((idx, selResult) => {
+        const text = $(selResult)
           .text()
           .replace(this._sanitizeWSRegex, ' ')
           .replace(this._sanitizeRegex, '')
           .replace(this._sanitizeNLRegex, '\n');
-        if (this.filterFunct(txt)) {
+        if (this.filterFunct(text)) {
           this._logInfo('found match');
-          jobs.push(this.exportFunct(focusURL, sel, txt));
+          jobs.push(this.exportFunct(focusURI, selector, text));
           this.resultCount--;
         } else {
           this._logInfo('filtered match');
@@ -314,13 +316,13 @@ class Spider {
 
     $(this.followSelector).each((idx, elem) => {
       // eslint-disable-next-line node/no-deprecated-api
-      const resolved = url.resolve(focusURL, $(elem).attr('href'));
+      const resolved = url.resolve(focusURI, $(elem).attr('href'));
       if (!this._seen.has(resolved)) {
-        if (REGEX_URL.test(resolved)) {
-          this._logInfo(`new url: ${resolved}`);
+        if (REGEX_URI.test(resolved)) {
+          this._logInfo(`new URI: ${resolved}`);
           this._queue.push(resolved);
         } else {
-          this._logInfo(`resolved URL wasn't valid (${resolved})`);
+          this._logInfo(`resolved URI wasn't valid (${resolved})`);
         }
       }
     });
@@ -335,7 +337,7 @@ class Spider {
    */
   async run() {
     this._logInfo(`start time: ${new Date(this._startTime)}`);
-    this._logInfo(`root URL: ${this._queue[0]}`);
+    this._logInfo(`root URI: ${this._queue[0]}`);
 
     while (!(await this._isFinished())) {
       if (this._jobs.length >= this.threadCount) {

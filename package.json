@@ -41,10 +41,10 @@
   "engineStrict": true,
   "browserslist": [],
   "dependencies": {
-    "cheerio": "^1.0.0-rc.2",
+    "cheerio": "^1.0.0-rc.3",
     "node-fetch": "^2.6.0",
-    "sequelize": "^4.44.3",
-    "sqlite3": "^4.1.0"
+    "sequelize": "^5.21.2",
+    "sqlite3": "^4.0.0"
   },
   "devDependencies": {
     "eslint": "^6.7.1",
