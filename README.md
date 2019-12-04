@@ -13,7 +13,7 @@
 - builder (call chaining) design pattern
 - extensible
 
-## API 
+## API
 
 Docs in [gh-pages](https://nl253.github.io/WebScraper/)
 
@@ -30,10 +30,10 @@ crawler.setRespSecW8(20)
        .setTimeLimit(120) // sec
        .setThreadCount(8) // #workers
        .setSiteCount(100) // distinct URLs
-       // run returns void, you might want to provide 
+       // run returns void, you might want to provide
        // an export function for each result (see below)
        // by default goes to sqlite ./db and prints to console
-       .run(); 
+       .run();
 ```
 
 OR use init object in the constructor:
@@ -44,9 +44,9 @@ const spiderOpts = {
   // Function<String, String, String, Promise>
   exportFunct: exports.combine(exports.console(), exports.sqlite()),
   // predicate i.e. Function<String, Boolean>
-  filterFunct: (txt) => true, 
+  filterFunct: (txt) => true,
   // Array<String>
-  followSelectors: [], 
+  followSelectors: [],
   // String
   logInfoFile: undefined, // logging goes to console
   // String
@@ -56,7 +56,7 @@ const spiderOpts = {
   // Integer
   respSecW8: 10,
   // Array<String>
-  selectors: [], 
+  selectors: [],
   // Integer
   resultCount: 100,
   // Integer
@@ -71,7 +71,6 @@ const startURL = "https://stackoverflow.com/questions/...";
 const crawler = new Spider(startURL, spiderOpts);
 crawler.run();
 ```
-
 
 ```js
 const startURL = "https://stackoverflow.com/questions/...";
@@ -88,7 +87,7 @@ crawler.setRespSecW8(20)
        .setSiteCount(100) // distinct URLs
        // run returns void, you might want to provide an export function for each result (see below)
        // by default goes to sqlite ./db and prints to console
-       .run(); 
+       .run();
 ```
 
 See export functions below to save results.
@@ -115,19 +114,19 @@ where `myExport` is:
 
 - `sqlite`
 
-  Generates a `Result` table with columns: 
-  
+  Generates a `Result` table with columns:
+
   - `id INT`
   - `text TEXT`
   - `selector TEXT`
-  - `uri TEXT` 
-  
+  - `uri TEXT`
+
   columns.
 
   ```js
    exporting.sqlite() // generate output db name
   ```
-  
+
   ```js
   exporting.sqlite('my-database.sqlite')
   ```
@@ -137,11 +136,11 @@ where `myExport` is:
   ```js
   exporting.console() // default formatter
   ```
-  
+
   ```js
   exporting.console('%s :: %s => %s') // string formatter for (uri, selector, text)
   ```
-  
+
   ```js
   exporting.console((uri, selector, text) => `${uri} :: ${text.slice(0, 100)}`))
   ```
@@ -151,26 +150,25 @@ where `myExport` is:
   ```js
   exporting.file() // default file name, default formatter
   ```
-  
+
   ```js
   exporting.file('results.csv') // custom file name, default csv formatter
   ```
-  
+
   ```js
   exporting.file('results.log', 'INFO %s, %s, %s') // custom file name, string formatter
   ```
-  
+
   ```js
   exporting.file('results.log', (uri, selector, text) => `${uri} :: ${text.slice(0, 100)}`)
   ```
-
 
 - `combine` (used to broadcast results to more than one exports)
 
   ```js
   exporting.combine(
-    exporting.sqlite(), 
-    exporting.console(), 
+    exporting.sqlite(),
+    exporting.console(),
     exporting.file(),
   )
   ```
@@ -183,9 +181,7 @@ where `myExport` is:
 
 - `default` (enabled by default, sends to console, CSV file and sqlite database)
 
-
 It's easy to define your own export function. E.g. imagine wanting to POST each result to some 3rd party API.
-
 
 ```js
 const myExportFunction = async (uri, selector, text) => {
@@ -204,15 +200,15 @@ const { Spider, exporting } = require('simple-webscraper');
 (async function() {
   const s = new Spider('https://www.jobsite.co.uk/jobs/javascript');
 
-  const sqliteExport = 
+  const sqliteExport =
           await exporting.sqlite('./db', true /* force wipe if exists */);
 
   s.setExportFunct(sqliteExport)
    .appendSelector(".job > .row > .col-sm-12")
     // don't look for jobs in London, make sure they are graduate!
    .setFilterFunct(txt => !!txt.match('raduate') && !txt.match('London'))
-    // next page 
-   .appendFollowSelector(".results-footer-links-container ul.pagination li a[href*='page=']") 
+    // next page
+   .appendFollowSelector(".results-footer-links-container ul.pagination li a[href*='page=']")
     // stop after 3 websites (urls)
    .setSiteCount(3)
     // run for 30 sec
