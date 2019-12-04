@@ -103,7 +103,7 @@ class Spider {
    * @param {function(String, String, String): Promise<void>} f
    * @returns {Spider}
    */
-  setExportFunct(f) { return this._set('URI', f); }
+  setExportFunct(f) { return this._set('exportFunct', f); }
 
   /**
    * @param {function(String): Boolean} f
@@ -289,7 +289,8 @@ class Spider {
           DNT: '1',
         },
       });
-      $ = cheerio.load(await res.text());
+      const html = await res.text();
+      $ = cheerio.load(html);
     } catch (e) {
       this._logErr(e.message || e.toString());
       return;
