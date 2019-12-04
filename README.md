@@ -15,7 +15,7 @@
 
 ## API 
 
-Docs in <a href="https://nl253.github.io/WebScraper/">gh-pages</a>.
+Docs in [gh-pages](https://nl253.github.io/WebScraper/)
 
 ```js
 const startURL = "https://stackoverflow.com/questions/...";
@@ -36,7 +36,7 @@ crawler.setRespSecW8(20)
        .run(); 
 ```
 
-<p>OR use init object in the constructor</p>
+OR use init object in the constructor:
 
 ```js
 // DEFAULT init options
