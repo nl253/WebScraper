@@ -16,4 +16,4 @@ const { Spider, exporting } = require('..');
   } catch (e) {
     console.error(e);
   }
-})();
+}());

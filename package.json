@@ -75,8 +75,8 @@
   ],
   "private": false,
   "scripts": {
-    "example": "node examples/example.js",
-    "example-2": "node examples/gh-rust-repos.js",
+    "example": "node examples/jobsite.js",
+    "example-2": "node examples/gh.js",
     "test": "npx jest",
     "doc": "echo -e 'GENERATING DOCS\\n'; rm -rf ./docs; npx jsdoc -d ./docs -R ./README.md ./*.js",
     "doc:publish": "echo -e 'PUBLISHING DOCS\\n'; npm run doc; git add ./docs; git commit -am 'Update docs' -n; npm version patch; git push",
