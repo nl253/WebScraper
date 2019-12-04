@@ -3,15 +3,19 @@ const { existsSync } = require('fs');
 const dbExport = require('./db');
 
 /**
- * @param {String} [dbPath]
- * @param {Boolean} [doSync]
- * @param {*} [extraOpts]
- * @returns {function(String, String, String): Promise<void>}
+ * @param {string} [dbPath]
+ * @param {boolean} [doSync]
+ * @param {Partial<sequelize.Options>} [dbOpts]
+ * @param {Partial<sequelize.ModelOptions>} [modelOpts]
+ * @returns {ExportFunct}
  */
-module.exports = (dbPath, doSync = false, extraOpts = {}) => {
+const sqliteExport = (dbPath, doSync = false, dbOpts = {}, modelOpts = {}) => {
   const p = dbPath || `db-${new Date().toISOString().replace(/\W+/g, '-')}.sqlite`;
   return dbExport(
     `sqlite:${p}`,
     doSync || !existsSync(p),
-    { dialect: 'sqlite', ...extraOpts });
+    { dialect: 'sqlite', ...dbOpts },
+    modelOpts);
 };
+
+module.exports = sqliteExport;

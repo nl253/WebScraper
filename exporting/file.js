@@ -1,4 +1,4 @@
-const fs = require('fs');
+const { createWriteStream } = require('fs');
 
 const consoleExport = require('./console');
 
@@ -7,17 +7,20 @@ const consoleExport = require('./console');
  * @param {string} selector
  * @param {string} text
  * @returns {string}
+ * @private
  */
 const csvFmt = (uri, selector, text) => `"${uri.replace(/"/g, "'")}","${selector.replace(/"/g, "'")}","${text.replace(/"/g, "'")}"\n`;
 
 /**
  * @param {string} [filePath]
- * @param {String|function(String, String, String): String} [fmt]
- * @param {*} [opts]
- * @returns {function(String, String, String): Promise<void>}
+ * @param {string|function(string, string, string): string} [fmt]
+ * @param {Partial<{flags: string, encoding: string, fd: number, mode: number, autoClose: boolean, start: number}>} [opts]
+ * @returns {ExportFunct}
  */
-module.exports = (filePath, fmt = csvFmt, opts = {}) => {
+const fileExport = (filePath, fmt = csvFmt, opts = {}) => {
   const p = filePath || (`results-${new Date().toISOString().replace(/\W+/g, '-')}.csv`);
-  const file = fs.createWriteStream(p);
+  const file = createWriteStream(p, opts);
   return consoleExport(fmt, (msg) => file.write(msg));
 };
+
+module.exports = fileExport;

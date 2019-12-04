@@ -1,9 +1,9 @@
 const { format } = require('util');
 
 /**
- * @param {String|function(String, String, String): String} [fmt]
- * @param {function(String): void} [consumer]
- * @returns {function(String, String, String): Promise<void>}
+ * @param {string|function(string, string, string): string} [fmt]
+ * @param {function(string): void} [consumer]
+ * @returns {ExportFunct}
  */
 const consoleExport = (fmt = (uri, selector, text) => `MATCH ${uri} ${text.slice(0, 150)}`, consumer = console.log) => {
   if (fmt.constructor.name[0] === 'S') {

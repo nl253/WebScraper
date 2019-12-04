@@ -3,11 +3,12 @@ const Sequelize = require('sequelize');
 let cacheDB;
 
 /**
- * @param {String} connectionStr
- * @param {*} [opts]
+ * @param {string} connectionStr
+ * @param {Partial<sequelize.Options>} [dbOpts]
  * @returns {Promise<sequelize.Sequelize>}
+ * @private
  */
-const getDB = async (connectionStr, opts = {}) => {
+const getDB = async (connectionStr, dbOpts = {}) => {
   if (cacheDB === undefined) {
     cacheDB = new Sequelize(connectionStr, {
       logging: false,
@@ -17,7 +18,7 @@ const getDB = async (connectionStr, opts = {}) => {
         acquire: 30000,
         idle: 10000
       },
-      ...opts });
+      ...dbOpts });
     await cacheDB.sync();
     await cacheDB.authenticate();
     console.log('Connection to database has been established successfully.');
@@ -30,10 +31,11 @@ let cacheResultTbl;
 /**
  * @param {sequelize.Sequelize} db
  * @param {boolean} [doSync]
- * @param {*} [opts]
+ * @param {Partial<sequelize.ModelOptions>} [modelOpts]
  * @returns {Promise<sequelize.Model>}
+ * @private
  */
-const getResultTbl = async (db, doSync = false, opts = {}) => {
+const getResultTbl = async (db, doSync = false, modelOpts = {}) => {
   if (cacheResultTbl === undefined) {
     cacheResultTbl = db.define('Result', {
       id: {
@@ -55,7 +57,7 @@ const getResultTbl = async (db, doSync = false, opts = {}) => {
       }
     }, {
       freezeTableName: true,
-      ... opts,
+      ... modelOpts,
     });
     await cacheResultTbl.sync({ force: doSync });
   }
@@ -63,9 +65,12 @@ const getResultTbl = async (db, doSync = false, opts = {}) => {
 };
 
 /**
- * @param {String} connectionStr
- * @param {Boolean} [doSync]
- * @param {*} [opts]
- * @returns {function(String, String, String): Promise<void>}
+ * @param {string} connectionStr
+ * @param {boolean} [doSync]
+ * @param {Partial<sequelize.Options>} [dbOpts]
+ * @param {Partial<sequelize.ModelOptions>} [modelOpts]
+ * @returns {ExportFunct}
  */
-module.exports = (connectionStr, doSync = false, opts = {}) => async (uri, selector, text) => (await getResultTbl(await getDB(connectionStr, opts), doSync, opts)).create({ text, selector, uri });
+const dbExport = (connectionStr, doSync = false, dbOpts = {}, modelOpts = {}) => async (uri, selector, text) => (await getResultTbl(await getDB(connectionStr, dbOpts), doSync, modelOpts)).create({ text, selector, uri });
+
+module.exports = dbExport;

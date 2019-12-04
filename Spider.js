@@ -16,6 +16,24 @@ const REGEX_SANITISE_WS = /\s{2,}/g;
 const SEC = 1000;
 
 /**
+ * @callback PreProcessFunct
+ * @param {string} text
+ * @returns {string}
+ */
+
+/**
+ * @callback PostProcessFunct
+ * @param {string} text
+ * @returns {string}
+ */
+
+/**
+ * @callback FilterFunct
+ * @param {string} text
+ * @returns {boolean}
+ */
+
+/**
  * Sleeps for sec seconds.
  *
  * @private
@@ -28,10 +46,10 @@ class Spider {
   /**
    * @param {string} start starting URI
    * @param {Record<string,*>} [opts]
-   * @param {function(string, string, string): Promise<void>} [opts.exportFunct]
-   * @param {function(string): boolean} [opts.filterFunct]
-   * @param {function(string): string} [opts.preProcessTextFunct]
-   * @param {function(string): string} [opts.postProcessTextFunct]
+   * @param {ExportFunct} [opts.exportFunct]
+   * @param {FilterFunct} [opts.filterFunct]
+   * @param {PreProcessFunct} [opts.preProcessTextFunct]
+   * @param {PostProcessFunct} [opts.postProcessTextFunct]
    * @param {string[]} [opts.followSelectors]
    * @param {string} [opts.logErrFile]
    * @param {string} [opts.logInfoFile]
@@ -148,25 +166,25 @@ class Spider {
   setThreadCount(n) { return this._set('threadCount', n); }
 
   /**
-   * @param {function(string, string, string): Promise<void>} f
+   * @param {ExportFunct} f
    * @returns {Spider}
    */
   setExportFunct(f) { return this._set('exportFunct', f); }
 
   /**
-   * @param {function(string): string} f
+   * @param {PostProcessFunct} f
    * @returns {Spider}
    */
   setPostProcessTextFunct(f) { return this._set('postProcessTextFunct', f); }
 
   /**
-   * @param {function(string): string} f
+   * @param {PreProcessFunct} f
    * @returns {Spider}
    */
   setPreProcessTextFunct(f) { return this._set('preProcessTextFunct', f); }
 
   /**
-   * @param {function(string): boolean} f
+   * @param {FilterFunct} f
    * @returns {Spider}
    */
   setFilterFunct(f) { return this._set('filterFunct', f); }

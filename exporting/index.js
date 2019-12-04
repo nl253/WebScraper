@@ -1,4 +1,14 @@
 /* eslint-disable global-require */
+
+
+/**
+ * @callback ExportFunct
+ * @param {string} uri
+ * @param {string} selector
+ * @param {string} text
+ * @returns {Promise<void>}
+ */
+
 const exporting = {
   db: require('./db'),
   sqlite: require('./sqlite'),
