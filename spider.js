@@ -7,6 +7,9 @@ const fetch = require('node-fetch');
 const exporting = require('./exporting');
 
 const REGEX_URI = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
+const REGEX_SANITISE_NL = /\n{2,}/g;
+const REGEX_SANITISE = /\s{2,}\n+|\n{2,}\s+/g;
+const REGEX_SANITISE_WS = /\s{2,}/g;
 const SEC = 1000;
 
 /**
@@ -20,20 +23,22 @@ const sleep = (sec) => new Promise((res, rej) => setTimeout(res, sec * SEC));
 
 class Spider {
   /**
-   * @param {!String} start starting URI
-   * @param {?Object} [opts]
-   * @param {!Function} [opts.exportFunct]
-   * @param {!Function} [opts.filterFunct]
-   * @param {!Array<String>} [opts.followSelectors]
-   * @param {!String} [opts.logErrFile]
-   * @param {!String} [opts.logInfoFile]
-   * @param {!Number} [opts.redirFollowCount]
-   * @param {!Number} [opts.respSecW8]
-   * @param {!Array<String>} [opts.selectors]
-   * @param {!Number} [opts.resultCount]
-   * @param {!Number} [opts.siteCount]
-   * @param {!Number} [opts.threadCount]
-   * @param {!Number} [opts.timeLimit]
+   * @param {String} start starting URI
+   * @param {Object} [opts]
+   * @param {function(String, String, String): Promise<void>} [opts.exportFunct]
+   * @param {function(String): Boolean} [opts.filterFunct]
+   * @param {function(String): String} [opts.preProcessTextFunct]
+   * @param {function(String): String} [opts.postProcessTextFunct]
+   * @param {String[]} [opts.followSelectors]
+   * @param {String} [opts.logErrFile]
+   * @param {String} [opts.logInfoFile]
+   * @param {Number} [opts.redirFollowCount]
+   * @param {Number} [opts.respSecW8]
+   * @param {String[]} [opts.selectors]
+   * @param {Number} [opts.resultCount]
+   * @param {Number} [opts.siteCount]
+   * @param {Number} [opts.threadCount]
+   * @param {Number} [opts.timeLimit]
    */
   constructor(start, opts = {}) {
     if (!start) {
@@ -42,13 +47,12 @@ class Spider {
 
     this._jobs = [];
     this._queue = [start];
-    this._sanitizeNLRegex = /\n{2,}/g;
-    this._sanitizeRegex = /\s{2,}\n+|\n{2,}\s+/g;
-    this._sanitizeWSRegex = /\s{2,}/g;
     this._seen = new Set();
     this._startTime = Date.now();
 
     this.exportFunct = opts.exportFunct || exporting.default;
+    this.postProcessTextFunct = opts.postProcessTextFunct || (text => text);
+    this.preProcessTextFunct = opts.preProcessTextFunct || (text => text.replace(REGEX_SANITISE_WS, ' ').replace(REGEX_SANITISE, '').replace(REGEX_SANITISE_NL, '\n'));
     this.filterFunct = opts.filterFunct || ((text) => true);
     this.followSelectors = opts.followSelectors || [];
     this.redirFollowCount = opts.redirFollowCount || 3;
@@ -104,6 +108,18 @@ class Spider {
    * @returns {Spider}
    */
   setExportFunct(f) { return this._set('exportFunct', f); }
+
+  /**
+   * @param {function(String): String} f
+   * @returns {Spider}
+   */
+  setPostProcessTextFunct(f) { return this._set('postProcessTextFunct', f); }
+
+  /**
+   * @param {function(String): String} f
+   * @returns {Spider}
+   */
+  setPreProcessTextFunct(f) { return this._set('preProcessTextFunct', f); }
 
   /**
    * @param {function(String): Boolean} f
@@ -300,14 +316,10 @@ class Spider {
     for (const selector of this.selectors) {
       this._logInfo(`selecting: ${selector}`);
       $(selector).each((idx, selResult) => {
-        const text = $(selResult)
-          .text()
-          .replace(this._sanitizeWSRegex, ' ')
-          .replace(this._sanitizeRegex, '')
-          .replace(this._sanitizeNLRegex, '\n');
+        const text = this.preProcessTextFunct($(selResult).text());
         if (this.filterFunct(text)) {
           this._logInfo('found match');
-          jobs.push(this.exportFunct(focusURI, selector, text));
+          jobs.push(this.exportFunct(focusURI, selector, this.postProcessTextFunct(text)));
           this.resultCount--;
         } else {
           this._logInfo('filtered match');
