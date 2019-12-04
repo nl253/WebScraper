@@ -1,8 +1,8 @@
-const url = require('url');
+const url                   = require('url');
 const { createWriteStream } = require('fs');
 
 const cheerio = require('cheerio');
-const fetch = require('node-fetch');
+const fetch   = require('node-fetch');
 
 const exporting = require('./exporting');
 
@@ -52,8 +52,8 @@ class Spider {
     this._startTime = Date.now();
 
     this.exportFunct = opts.exportFunct || exporting.default;
-    this.postProcessTextFunct = opts.postProcessTextFunct || (text => text);
-    this.preProcessTextFunct = opts.preProcessTextFunct || (text => text.replace(REGEX_SANITISE_WS, ' ').replace(REGEX_SANITISE, '').replace(REGEX_SANITISE_NL, '\n'));
+    this.postProcessTextFunct = opts.postProcessTextFunct || ((text) => text);
+    this.preProcessTextFunct = opts.preProcessTextFunct || ((text) => text.replace(REGEX_SANITISE_WS, ' ').replace(REGEX_SANITISE, '').replace(REGEX_SANITISE_NL, '\n'));
     this.filterFunct = opts.filterFunct || ((text) => true);
     this.followSelectors = opts.followSelectors || [];
     this.redirFollowCount = opts.redirFollowCount || 3;
