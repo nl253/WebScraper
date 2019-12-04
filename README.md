@@ -101,17 +101,21 @@ Import the exporting module:
 const { exporting, Spider }  = require('simple-webscraper');
 ```
 
+Declare a spider:
+
+```js
+const spider = new Spider(uri, { /* opts */ });
+```
+
 
 - `sqlite` (by default produce)
 
   ```js
-  const spider = new Spider(uri, { /* opts */ });
   spider.setExportFunct(exporting.sqlite()) // generate output db name
         .run();
   ```
   
   ```js
-  const spider = new Spider(uri, { /* opts */ });
   spider.setExportFunct(exporting.sqlite('my-database.sqlite'))
         .run();
   ```
@@ -119,19 +123,16 @@ const { exporting, Spider }  = require('simple-webscraper');
 - `console` (by default logs to the console)
 
   ```js
-  const spider = new Spider(uri, { /* opts */ });
   spider.setExportFunct(exporting.console()) // default formatter
         .run();
   ```
   
   ```js
-  const spider = new Spider(uri, { /* opts */ });
   spider.setExportFunct(exporting.console('%s :: %s => %s')) // string formatter for (uri, selector, text)
         .run();
   ```
   
   ```js
-  const spider = new Spider(uri, { /* opts */ });
   spider.setExportFunct(exporting.console((uri, selector, text) => `${uri} :: ${text.slice(0, 100)}`))
         .run();
   ```
@@ -139,19 +140,16 @@ const { exporting, Spider }  = require('simple-webscraper');
 - `file` (by default produces CSV)
 
   ```js
-  const spider = new Spider(uri, { /* opts */ });
   spider.setExportFunct(exporting.file()) // default file name, default formatter
         .run();
   ```
   
   ```js
-  const spider = new Spider(uri, { /* opts */ });
   spider.setExportFunct(exporting.file('results.csv')) // custom file name, default csv formatter
         .run();
   ```
   
   ```js
-  const spider = new Spider(uri, { /* opts */ });
   spider.setExportFunct(exporting.file('results.log', (uri, selector, text) => `${uri} :: ${text.slice(0, 100)}`))
         .run();
   ```
@@ -160,7 +158,6 @@ const { exporting, Spider }  = require('simple-webscraper');
 - `combine` (used to broadcast results to many exports)
 
   ```js
-  const spider = new Spider(uri, { /* opts */ });
   spider.setExportFunct(exporting.combine(
       exporting.sqlite(), 
       exporting.console(), 
@@ -171,7 +168,6 @@ const { exporting, Spider }  = require('simple-webscraper');
 - `db`
 
   ```js
-  const spider = new Spider(uri, { /* opts */ });
   spider.setExportFunct(exporting.db(dbURI)) // look at sequelize docs
         .run();
   ```
