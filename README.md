@@ -109,6 +109,8 @@ const spider = new Spider(uri, { /* opts */ });
 
 - `sqlite`
 
+  Generates a `Result` table with columns: `id INT`, `text TEXT`, `selector TEXT`, `uri TEXT` columns.
+
   ```js
   spider.setExportFunct(exporting.sqlite()) // generate output db name
         .run();
