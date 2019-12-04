@@ -15,6 +15,8 @@
 
 ## API 
 
+Docs in <a href="https://nl253.github.io/WebScraper/">gh-pages</a>.
+
 ```js
 const startURL = "https://stackoverflow.com/questions/...";
 const crawler = new Spider(startURL);
