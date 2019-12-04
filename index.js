@@ -1,4 +1,4 @@
 module.exports = {
-  Spider: require('./spider'),
+  Spider: require('./Spider'),
   exporting: require('./exporting'),
 };

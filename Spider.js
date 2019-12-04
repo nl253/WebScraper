@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers,complexity,max-lines */
 const url                   = require('url');
 const { createWriteStream } = require('fs');
 
@@ -6,6 +7,7 @@ const fetch   = require('node-fetch');
 
 const exporting = require('./exporting');
 
+// eslint-disable-next-line optimize-regex/optimize-regex
 const REGEX_URI         = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
 const REGEX_SANITISE_NL = /\n{2,}/g;
 const REGEX_SANITISE    = /\s{2,}\n+|\n{2,}\s+/g;
@@ -17,29 +19,29 @@ const SEC = 1000;
  * Sleeps for sec seconds.
  *
  * @private
- * @param {Number} sec
+ * @param {number} sec
  * @returns {Promise<void>}
  */
-const sleep = (sec) => new Promise((res, rej) => setTimeout(res, sec * SEC));
+const sleep = (sec) => new Promise((resolve, reject) => setTimeout(resolve, sec * SEC));
 
 class Spider {
   /**
-   * @param {String} start starting URI
-   * @param {Object} [opts]
-   * @param {function(String, String, String): Promise<void>} [opts.exportFunct]
-   * @param {function(String): Boolean} [opts.filterFunct]
-   * @param {function(String): String} [opts.preProcessTextFunct]
-   * @param {function(String): String} [opts.postProcessTextFunct]
-   * @param {String[]} [opts.followSelectors]
-   * @param {String} [opts.logErrFile]
-   * @param {String} [opts.logInfoFile]
-   * @param {Number} [opts.redirFollowCount]
-   * @param {Number} [opts.respSecW8]
-   * @param {String[]} [opts.selectors]
-   * @param {Number} [opts.resultCount]
-   * @param {Number} [opts.siteCount]
-   * @param {Number} [opts.threadCount]
-   * @param {Number} [opts.timeLimit]
+   * @param {string} start starting URI
+   * @param {Record<string,*>} [opts]
+   * @param {function(string, string, string): Promise<void>} [opts.exportFunct]
+   * @param {function(string): boolean} [opts.filterFunct]
+   * @param {function(string): string} [opts.preProcessTextFunct]
+   * @param {function(string): string} [opts.postProcessTextFunct]
+   * @param {string[]} [opts.followSelectors]
+   * @param {string} [opts.logErrFile]
+   * @param {string} [opts.logInfoFile]
+   * @param {number} [opts.redirFollowCount]
+   * @param {number} [opts.respSecW8]
+   * @param {string[]} [opts.selectors]
+   * @param {number} [opts.resultCount]
+   * @param {number} [opts.siteCount]
+   * @param {number} [opts.threadCount]
+   * @param {number} [opts.timeLimit]
    */
   constructor(start, opts = {}) {
     if (!start) {
@@ -69,7 +71,7 @@ class Spider {
   }
 
   /**
-   * @param {String} prop
+   * @param {string} prop
    * @param {*} val
    * @returns {Spider}
    * @private
@@ -80,7 +82,7 @@ class Spider {
   }
 
   /**
-   * @param {String} prop
+   * @param {string} prop
    * @param {*} val
    * @returns {Spider}
    * @private
@@ -91,9 +93,9 @@ class Spider {
   }
 
   /**
-   * @param {?String} fName
+   * @param {?string} fName
    * @param {'info'|'error'} lvl
-   * @returns {function(...String): void}
+   * @returns {function(...string): void}
    * @private
    */
   _initLogToFile(fName, lvl = 'info') {
@@ -110,73 +112,73 @@ class Spider {
   }
 
   /**
-   * @param {Number} n
+   * @param {number} n
    * @returns {Spider}
    */
   setTimeLimit(n) { return this._set('timeLimit', n); }
 
   /**
-   * @param {Number} n
+   * @param {number} n
    * @returns {Spider}
    */
   setRedirFollowCount(n) { return this._set('redirFollowCount', n); }
 
   /**
-   * @param {Number} n
+   * @param {number} n
    * @returns {Spider}
    */
   setRespSecW8(n) { return this._set('respSecW8', n); }
 
   /**
-   * @param {Number} n
+   * @param {number} n
    * @returns {Spider}
    */
   setResultCount(n) { return this._set('resultCount', n); }
 
   /**
-   * @param {Number} n
+   * @param {number} n
    * @returns {Spider}
    */
   setSiteCount(n) { return this._set('siteCount', n); }
 
   /**
-   * @param {Number} n
+   * @param {number} n
    * @returns {Spider}
    */
   setThreadCount(n) { return this._set('threadCount', n); }
 
   /**
-   * @param {function(String, String, String): Promise<void>} f
+   * @param {function(string, string, string): Promise<void>} f
    * @returns {Spider}
    */
   setExportFunct(f) { return this._set('exportFunct', f); }
 
   /**
-   * @param {function(String): String} f
+   * @param {function(string): string} f
    * @returns {Spider}
    */
   setPostProcessTextFunct(f) { return this._set('postProcessTextFunct', f); }
 
   /**
-   * @param {function(String): String} f
+   * @param {function(string): string} f
    * @returns {Spider}
    */
   setPreProcessTextFunct(f) { return this._set('preProcessTextFunct', f); }
 
   /**
-   * @param {function(String): Boolean} f
+   * @param {function(string): boolean} f
    * @returns {Spider}
    */
   setFilterFunct(f) { return this._set('filterFunct', f); }
 
   /**
-   * @param {String} s
+   * @param {string} s
    * @returns {Spider}
    */
   appendSelector(s) { return this._append('selectors', s); }
 
   /**
-   * @param {String|String[]} s
+   * @param {string|string[]} s
    * @returns {Spider}
    */
   setSelector(s) {
@@ -188,19 +190,19 @@ class Spider {
   }
 
   /**
-   * @param {String} s
+   * @param {string} s
    * @returns {Spider}
    */
   appendFollowSelector(s) { return this._append('followSelectors', s); }
 
   /**
-   * @param {String|String[]} s
+   * @param {string|string[]} s
    * @returns {Spider}
    */
   setFollowSelector(s) { return this._set('followSelectors', Array.isArray(s) ? s : [s]); }
 
   /**
-   * @param {String} fName
+   * @param {string} fName
    * @returns {Spider}
    */
   setLogInfoFile(fName) {
@@ -209,7 +211,7 @@ class Spider {
   }
 
   /**
-   * @param {String} fName
+   * @param {string} fName
    * @returns {Spider}
    */
   setLogErrFile(fName) {
@@ -220,14 +222,14 @@ class Spider {
   /**
    * Gets the joint selector.
    *
-   * @returns {String} selector
+   * @returns {string} selector
    */
   get selector() { return this.selectors.join(', '); }
 
   /**
    * Gets the joint follow selector.
    *
-   * @returns {String} followSelector
+   * @returns {string} followSelector
    */
   get followSelector() { return this.followSelectors.join(', '); }
 
@@ -236,7 +238,7 @@ class Spider {
    * Emits useful message telling you what caused it to stop.
    *
    * @private
-   * @returns {Promise<Boolean>} isFinished
+   * @returns {Promise<boolean>} isFinished
    */
   async _isFinished() {
     let waited = 0;
@@ -250,6 +252,7 @@ class Spider {
     if (this._queue.length === 0 && this._jobs.length > 0) {
       const start = Date.now();
       while (this._queue.length === 0 && this._jobs.length > 0 && ((Date.now() - start) / SEC) <= maxWait) {
+        // eslint-disable-next-line no-await-in-loop
         await sleep(1);
         waited++;
       }
@@ -300,9 +303,9 @@ class Spider {
         follow: this.redirFollowCount,
         timeout: this.respSecW8 * SEC, // ms
         headers: {
-          Accept: 'text/html',
+          'Accept': 'text/html',
           'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.98 Chrome/71.0.3578.98 Safari/537.36',
-          DNT: '1',
+          'DNT': '1',
         },
       });
       const html = await res.text();
@@ -340,28 +343,32 @@ class Spider {
       }
     });
 
-    // eslint-disable-next-line no-empty
+    // eslint-disable-next-line no-empty,no-await-in-loop
     while (await jobs.pop()) {}
     this.siteCount--;
   }
 
   /**
    * Web-scrape.
+   *
+   * @returns {Promise<void>}
    */
   async run() {
     this._logInfo(`start time: ${new Date(this._startTime)}`);
     this._logInfo(`root URI: ${this._queue[0]}`);
 
+    // eslint-disable-next-line no-await-in-loop
     while (!(await this._isFinished())) {
       if (this._jobs.length >= this.threadCount) {
-        // eslint-disable-next-line no-empty
+        // eslint-disable-next-line no-empty,no-await-in-loop
         while (await this._jobs.pop()) {}
+        // eslint-disable-next-line no-continue
         continue;
       }
       this._jobs.push(this._worker());
     }
 
-    // eslint-disable-next-line no-empty
+    // eslint-disable-next-line no-empty,no-await-in-loop
     while (await this._jobs.pop()) {}
     this._seen.clear();
   }

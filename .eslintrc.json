@@ -55,6 +55,7 @@
   "rules": {
     "security/detect-object-injection": "off",
     "node/shebang": "off",
+    "promise/param-names": 1,
     "accessor-pairs": 0,
     "indent": 1,
     "comma-dangle": 0,
@@ -467,14 +468,15 @@
           "yield": "yields"
         },
         "preferType": {
-          "boolean": "Boolean",
-          "number": "Number",
+          "Boolean": "boolean",
+          "Number": "number",
           "set": "Set",
           "map": "Map",
           "date": "Date",
           "array": "Array",
-          "string": "String",
-          "object": "Object"
+          "String": "string",
+          "Object": "Record<string,*>",
+          "object": "Record<string,*>"
         },
         "requireParamDescription": false,
         "requireReturn": false,
