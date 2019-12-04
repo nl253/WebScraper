@@ -1,16 +1,39 @@
 # Web Scraper
 
 - CSS selectors
-- inserts results into SQLite database
+- exporting function
+- pre-configured to insert results into SQLite database and generate CSV
 - stop conditions:
   - time
   - number of results
   - number of websites
-  - filter function to check for results
+- filter function to check for results
+- post- and pre-processing functions
 - init with options or set them later with `spider.setVal1(v).setVal2(v2)`
 - builder (call chaining) design pattern
+- extensible
 
 ## API 
+
+```js
+const startURL = "https://stackoverflow.com/questions/...";
+const crawler = new Spider(startURL);
+crawler.setRespSecW8(20)
+       .appendSelector('p.info')
+       .appendSelector('p.more-info')
+       .appendFollowSelector('.btn.next')
+       .appendFollowSelector('.btn.next-page')
+       .setPostProcessTextFunct(text => text.replace('mother', 'yes'))
+       .setFilterFunct(txt => !!txt.match('sunflower'))
+       .setTimeLimit(120) // sec
+       .setThreadCount(8) // #workers
+       .setSiteCount(100) // distinct URLs
+       // run returns void, you might want to provide an export function for each result (see below)
+       // by default goes to sqlite ./db and prints to console
+       .run(); 
+```
+
+<p>OR use init object in the constructor</p>
 
 ```js
 // DEFAULT init options
@@ -46,20 +69,19 @@ const crawler = new Spider(startURL, spiderOpts);
 crawler.run();
 ```
 
-<p>OR use methods to modify options (OPTIONAL, you can set them on init)</p>
 
 ```js
 const startURL = "https://stackoverflow.com/questions/...";
 const crawler = new Spider(startURL);
 crawler.setRespSecW8(20)
-       .setRespSecW8(10)
        .appendSelector('p.info')
        .appendSelector('p.more-info')
        .appendFollowSelector('.btn.next')
        .appendFollowSelector('.btn.next-page')
+       .setPostProcessTextFunct(text => text.replace('mother', 'yes'))
        .setFilterFunct(txt => !!txt.match('sunflower'))
        .setTimeLimit(120) // sec
-       .setThreadCount(8)
+       .setThreadCount(8) // #workers
        .setSiteCount(100) // distinct URLs
        // run returns void, you might want to provide an export function for each result (see below)
        // by default goes to sqlite ./db and prints to console
@@ -68,12 +90,106 @@ crawler.setRespSecW8(20)
 
 See export functions below to save results.
 
-### Export Function
+## Export Function
 
-Must be of type `(url: String, sel: String, txt: String) => Promise<*>`.
-There is an SQLite export function defined in `./exporting/sqlite` which you can import, initialise and register.
+Must be of type `(uri: string, selector: string, text: string) => Promise<*>`.
+There is a few configurable export functions that you can use:
 
-**NOTE** Results will be in `./db`.         
+Import the exporting module:
+
+```js
+const { exporting, Spider }  = require('simple-webscraper');
+```
+
+
+- `sqlite` (by default produce)
+
+  ```js
+  const spider = new Spider(uri, { /* opts */ });
+  spider.setExportFunct(exporting.sqlite()) // generate output db name
+        .run();
+  ```
+  
+  ```js
+  const spider = new Spider(uri, { /* opts */ });
+  spider.setExportFunct(exporting.sqlite('my-database.sqlite'))
+        .run();
+  ```
+
+- `console` (by default logs to the console)
+
+  ```js
+  const spider = new Spider(uri, { /* opts */ });
+  spider.setExportFunct(exporting.console()) // default formatter
+        .run();
+  ```
+  
+  ```js
+  const spider = new Spider(uri, { /* opts */ });
+  spider.setExportFunct(exporting.console('%s :: %s => %s')) // string formatter for (uri, selector, text)
+        .run();
+  ```
+  
+  ```js
+  const spider = new Spider(uri, { /* opts */ });
+  spider.setExportFunct(exporting.console((uri, selector, text) => `${uri} :: ${text.slice(0, 100)}`))
+        .run();
+  ```
+
+- `file` (by default produces CSV)
+
+  ```js
+  const spider = new Spider(uri, { /* opts */ });
+  spider.setExportFunct(exporting.file()) // default file name, default formatter
+        .run();
+  ```
+  
+  ```js
+  const spider = new Spider(uri, { /* opts */ });
+  spider.setExportFunct(exporting.file('results.csv')) // custom file name, default csv formatter
+        .run();
+  ```
+  
+  ```js
+  const spider = new Spider(uri, { /* opts */ });
+  spider.setExportFunct(exporting.file('results.log', (uri, selector, text) => `${uri} :: ${text.slice(0, 100)}`))
+        .run();
+  ```
+
+
+- `combine` (used to broadcast results to many exports)
+
+  ```js
+  const spider = new Spider(uri, { /* opts */ });
+  spider.setExportFunct(exporting.combine(
+      exporting.sqlite(), 
+      exporting.console(), 
+      exporting.file(),
+    )).run();
+  ```
+
+- `db`
+
+  ```js
+  const spider = new Spider(uri, { /* opts */ });
+  spider.setExportFunct(exporting.db(dbURI)) // look at sequelize docs
+        .run();
+  ```
+
+- `default` (enabled by default, sends to console, CSV file and sqlite database)
+
+<p>It's <strong>very</strong> easy to define your own export function. E.g. imagine wanting to POST each result to some 3rd party API.</p>   
+
+```js
+const myExportFunction = async (uri, selector, text) => {
+  const res = await http.post(myURI, { uri, selector, text });
+  return;
+};
+```
+
+## Example
+
+More examples in `./examples`.
 
 ```js
 const { Spider, exporting } = require('simple-webscraper');
