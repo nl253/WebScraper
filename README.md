@@ -149,6 +149,11 @@ const spider = new Spider(uri, { /* opts */ });
   ```
   
   ```js
+  spider.setExportFunct(exporting.file('results.log', 'INFO %s, %s, %s')) // custom file name, string formatter
+        .run();
+  ```
+  
+  ```js
   spider.setExportFunct(exporting.file('results.log', (uri, selector, text) => `${uri} :: ${text.slice(0, 100)}`))
         .run();
   ```
