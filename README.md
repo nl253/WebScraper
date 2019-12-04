@@ -197,22 +197,20 @@ More examples in `./examples`.
 ```js
 const { Spider, exporting } = require('simple-webscraper');
 
-(async function() {
-  const s = new Spider('https://www.jobsite.co.uk/jobs/javascript');
+const s = new Spider('https://www.jobsite.co.uk/jobs/javascript');
 
-  const sqliteExport =
-          await exporting.sqlite('./db', true /* force wipe if exists */);
+const sqliteExport =
+      await exporting.sqlite('./db', true /* force wipe if exists */);
 
-  s.setExportFunct(sqliteExport)
-   .appendSelector(".job > .row > .col-sm-12")
-    // don't look for jobs in London, make sure they are graduate!
-   .setFilterFunct(txt => !!txt.match('raduate') && !txt.match('London'))
-    // next page
-   .appendFollowSelector(".results-footer-links-container ul.pagination li a[href*='page=']")
-    // stop after 3 websites (urls)
-   .setSiteCount(3)
-    // run for 30 sec
-   .setTimeLimit(30)
-   .run();
-})();
+s.setExportFunct(sqliteExport)
+ .appendSelector(".job > .row > .col-sm-12")
+ // don't look for jobs in London, make sure they are graduate!
+ .setFilterFunct(txt => !!txt.match('raduate') && !txt.match('London'))
+ // next page
+ .appendFollowSelector(".results-footer-links-container ul.pagination li a[href*='page=']")
+ // stop after 3 websites (urls)
+ .setSiteCount(3)
+ // run for 30 sec
+ .setTimeLimit(30)
+ .run();
 ```
