@@ -6,10 +6,11 @@ const fetch = require('node-fetch');
 
 const exporting = require('./exporting');
 
-const REGEX_URI = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
+const REGEX_URI         = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
 const REGEX_SANITISE_NL = /\n{2,}/g;
-const REGEX_SANITISE = /\s{2,}\n+|\n{2,}\s+/g;
+const REGEX_SANITISE    = /\s{2,}\n+|\n{2,}\s+/g;
 const REGEX_SANITISE_WS = /\s{2,}/g;
+
 const SEC = 1000;
 
 /**
@@ -65,6 +66,47 @@ class Spider {
 
     this._logInfo = this._initLogToFile(opts.logInfoFile, 'info');
     this._logErr = this._initLogToFile(opts.logErrFile, 'error');
+  }
+
+  /**
+   * @param {String} prop
+   * @param {*} val
+   * @returns {Spider}
+   * @private
+   */
+  _set(prop, val) {
+    this[prop] = val;
+    return this;
+  }
+
+  /**
+   * @param {String} prop
+   * @param {*} val
+   * @returns {Spider}
+   * @private
+   */
+  _append(prop, val) {
+    this[prop].push(val);
+    return this;
+  }
+
+  /**
+   * @param {?String} fName
+   * @param {'info'|'error'} lvl
+   * @returns {function(...String): void}
+   * @private
+   */
+  _initLogToFile(fName, lvl = 'info') {
+    if (!fName) {
+      return this._initLogToFile(`log-${new Date().toISOString().replace(/\W+/g, '-')}.log`);
+    }
+    const stream = createWriteStream(fName);
+    return (msg) => {
+      stream.write(lvl.toUpperCase());
+      stream.write(' ');
+      stream.write(msg.toString());
+      stream.write('\n');
+    };
   }
 
   /**
@@ -176,47 +218,6 @@ class Spider {
   }
 
   /**
-   * @param {?String} fName
-   * @param {'info'|'error'} lvl
-   * @returns {function(...String): void}
-   * @private
-   */
-  _initLogToFile(fName, lvl = 'info') {
-    if (!fName) {
-      return this._initLogToFile(`log-${new Date().toISOString().replace(/\W+/g, '-')}.log`);
-    }
-    const stream = createWriteStream(fName);
-    return (msg) => {
-      stream.write(lvl.toUpperCase());
-      stream.write(' ');
-      stream.write(msg.toString());
-      stream.write('\n');
-    };
-  }
-
-  /**
-   * @param {String} prop
-   * @param {*} val
-   * @returns {Spider}
-   * @private
-   */
-  _set(prop, val) {
-    this[prop] = val;
-    return this;
-  }
-
-  /**
-   * @param {String} prop
-   * @param {*} val
-   * @returns {Spider}
-   * @private
-   */
-  _append(prop, val) {
-    this[prop].push(val);
-    return this;
-  }
-
-  /**
    * Gets the joint selector.
    *
    * @returns {String} selector
@@ -238,7 +239,6 @@ class Spider {
    * @returns {Promise<Boolean>} isFinished
    */
   async _isFinished() {
-
     let waited = 0;
     const maxWait = 10;
 
