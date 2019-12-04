@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Home</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Home</h1>
+
+    
+
+
+
+    
+
+
+    <h3> </h3>
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+    <section>
+        <article><h1>Web Scraper</h1>
+<ul>
+<li>CSS selectors</li>
+<li>exporting function</li>
+<li>pre-configured to insert results into SQLite database and generate CSV</li>
+<li>stop conditions:
+<ul>
+<li>time</li>
+<li>number of results</li>
+<li>number of websites</li>
+</ul>
+</li>
+<li>filter function to check for results</li>
+<li>post- and pre-processing functions</li>
+<li>init with options or set them later with <code>spider.setVal1(v).setVal2(v2)</code></li>
+<li>builder (call chaining) design pattern</li>
+<li>extensible</li>
+</ul>
+<h2>API</h2>
+<pre class="prettyprint source lang-js"><code>const startURL = &quot;https://stackoverflow.com/questions/...&quot;;
+const crawler = new Spider(startURL);
+crawler.setRespSecW8(20)
+       .appendSelector('p.info')
+       .appendSelector('p.more-info')
+       .appendFollowSelector('.btn.next')
+       .appendFollowSelector('.btn.next-page')
+       .setPostProcessTextFunct(text => text.replace('mother', 'yes'))
+       .setFilterFunct(txt => !!txt.match('sunflower'))
+       .setTimeLimit(120) // sec
+       .setThreadCount(8) // #workers
+       .setSiteCount(100) // distinct URLs
+       // run returns void, you might want to provide an export function for each result (see below)
+       // by default goes to sqlite ./db and prints to console
+       .run(); 
+</code></pre>
+<p>OR use init object in the constructor</p>
+<pre class="prettyprint source lang-js"><code>// DEFAULT init options
+const spiderOpts = {
+  // Function&lt;String, String, String, Promise>
+  exportFunct: exports.combine(exports.console(), exports.sqlite()),
+  // predicate i.e. Function&lt;String, Boolean>
+  filterFunct: (txt) => true, 
+  // Array&lt;String>
+  followSelectors: [], 
+  // String
+  logInfoFile: undefined, // logging goes to console
+  // String
+  logInfoFile: undefined, // logging goes to console
+  // Integer
+  redirFollowCount: 3,
+  // Integer
+  respSecW8: 10,
+  // Array&lt;String>
+  selectors: [], 
+  // Integer
+  resultCount: 100,
+  // Integer
+  siteCount: 10, // #sites
+  // Integer
+  threadCount: 4,
+  // Integer
+  timeLimit: 60, // sec
+};
+
+const startURL = &quot;https://stackoverflow.com/questions/...&quot;;
+const crawler = new Spider(startURL, spiderOpts);
+crawler.run();
+</code></pre>
+<pre class="prettyprint source lang-js"><code>const startURL = &quot;https://stackoverflow.com/questions/...&quot;;
+const crawler = new Spider(startURL);
+crawler.setRespSecW8(20)
+       .appendSelector('p.info')
+       .appendSelector('p.more-info')
+       .appendFollowSelector('.btn.next')
+       .appendFollowSelector('.btn.next-page')
+       .setPostProcessTextFunct(text => text.replace('mother', 'yes'))
+       .setFilterFunct(txt => !!txt.match('sunflower'))
+       .setTimeLimit(120) // sec
+       .setThreadCount(8) // #workers
+       .setSiteCount(100) // distinct URLs
+       // run returns void, you might want to provide an export function for each result (see below)
+       // by default goes to sqlite ./db and prints to console
+       .run(); 
+</code></pre>
+<p>See export functions below to save results.</p>
+<h2>Export Function</h2>
+<p>Must be of type <code>(uri: string, selector: string, text: string) =&gt; Promise&lt;*&gt;</code>.
+There is a few configurable export functions that you can use:</p>
+<p>Import the exporting module:</p>
+<pre class="prettyprint source lang-js"><code>const { exporting, Spider }  = require('simple-webscraper');
+</code></pre>
+<p>Declare a spider:</p>
+<pre class="prettyprint source lang-js"><code>const spider = new Spider(uri, { /* opts */ });
+</code></pre>
+<ul>
+<li>
+<p><code>sqlite</code></p>
+<p>Generates a <code>Result</code> table with columns: <code>id INT</code>, <code>text TEXT</code>, <code>selector TEXT</code>, <code>uri TEXT</code> columns.</p>
+<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.sqlite()) // generate output db name
+      .run();
+</code></pre>
+<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.sqlite('my-database.sqlite'))
+      .run();
+</code></pre>
+</li>
+<li>
+<p><code>console</code></p>
+<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.console()) // default formatter
+      .run();
+</code></pre>
+<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.console('%s :: %s => %s')) // string formatter for (uri, selector, text)
+      .run();
+</code></pre>
+<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.console((uri, selector, text) => `${uri} :: ${text.slice(0, 100)}`))
+      .run();
+</code></pre>
+</li>
+<li>
+<p><code>file</code></p>
+<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.file()) // default file name, default formatter
+      .run();
+</code></pre>
+<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.file('results.csv')) // custom file name, default csv formatter
+      .run();
+</code></pre>
+<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.file('results.log', 'INFO %s, %s, %s')) // custom file name, string formatter
+      .run();
+</code></pre>
+<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.file('results.log', (uri, selector, text) => `${uri} :: ${text.slice(0, 100)}`))
+      .run();
+</code></pre>
+</li>
+<li>
+<p><code>combine</code> (used to broadcast results to many exports)</p>
+<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.combine(
+    exporting.sqlite(), 
+    exporting.console(), 
+    exporting.file(),
+  )).run();
+</code></pre>
+</li>
+<li>
+<p><code>db</code></p>
+<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.db(dbURI)) // look at sequelize docs
+      .run();
+</code></pre>
+</li>
+<li>
+<p><code>default</code> (enabled by default, sends to console, CSV file and sqlite database)</p>
+</li>
+</ul>
+<p>It's <strong>very</strong> easy to define your own export function. E.g. imagine wanting to POST each result to some 3rd party API.</p>   
+<pre class="prettyprint source lang-js"><code>const myExportFunction = async (uri, selector, text) => {
+  const res = await http.post(myURI, { uri, selector, text });
+  return;
+};
+</code></pre>
+<h2>Example</h2>
+<p>More examples in <code>./examples</code>.</p>
+<pre class="prettyprint source lang-js"><code>const { Spider, exporting } = require('simple-webscraper');
+
+(async function() {
+  const s = new Spider('https://www.jobsite.co.uk/jobs/javascript');
+
+  const sqliteExport = await exporting.sqlite('./db', true /* force wipe if exists */);
+
+  s.setExportFunct(sqliteExport)
+   .appendSelector(&quot;.job > .row > .col-sm-12&quot;)
+    // don't look for jobs in London, make sure they are graduate!
+   .setFilterFunct(txt => !!txt.match('raduate') && !txt.match('London'))
+    // next page 
+   .appendFollowSelector(&quot;.results-footer-links-container ul.pagination li a[href*='page=']&quot;) 
+    // stop after 3 websites (urls)
+   .setSiteCount(3)
+    // run for 30 sec
+   .setTimeLimit(30)
+   .run();
+})();
+</code></pre></article>
+    </section>
+
+
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Spider.html">Spider</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Dec 04 2019 13:05:58 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
