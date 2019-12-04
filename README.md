@@ -95,7 +95,7 @@ See export functions below to save results.
 ## Export Function
 
 Must be of type `(uri: string, selector: string, text: string) => Promise<*>`.
-There is a few configurable export functions that you can use:
+There are configurable export functions that you can use:
 
 Import the exporting module:
 
@@ -163,7 +163,7 @@ const spider = new Spider(uri, { /* opts */ });
   ```
 
 
-- `combine` (used to broadcast results to many exports)
+- `combine` (used to broadcast results to more than one exports)
 
   ```js
   spider.setExportFunct(exporting.combine(
@@ -182,7 +182,7 @@ const spider = new Spider(uri, { /* opts */ });
 
 - `default` (enabled by default, sends to console, CSV file and sqlite database)
 
-<p>It's <strong>very</strong> easy to define your own export function. E.g. imagine wanting to POST each result to some 3rd party API.</p>   
+<p>It's easy to define your own export function. E.g. imagine wanting to POST each result to some 3rd party API.</p>   
 
 ```js
 const myExportFunction = async (uri, selector, text) => {
