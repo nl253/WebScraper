@@ -107,8 +107,7 @@ Declare a spider:
 const spider = new Spider(uri, { /* opts */ });
 ```
 
-
-- `sqlite` (by default produce)
+- `sqlite`
 
   ```js
   spider.setExportFunct(exporting.sqlite()) // generate output db name
@@ -120,7 +119,7 @@ const spider = new Spider(uri, { /* opts */ });
         .run();
   ```
 
-- `console` (by default logs to the console)
+- `console`
 
   ```js
   spider.setExportFunct(exporting.console()) // default formatter
@@ -137,7 +136,7 @@ const spider = new Spider(uri, { /* opts */ });
         .run();
   ```
 
-- `file` (by default produces CSV)
+- `file`
 
   ```js
   spider.setExportFunct(exporting.file()) // default file name, default formatter
