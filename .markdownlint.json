@@ -53,7 +53,7 @@
     "list_item_empty_lines": false
   },
   "ol-prefix": {
-    "style": "one"
+    "style": "one_or_ordered"
   },
   "proper-names": false,
   "required-headers": false,

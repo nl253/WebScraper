@@ -35,11 +35,11 @@
   "parserOptions": {
     "codeFrame": false,
     "ecmaFeatures": {
+      "spread": true,
       "impliedStrict": true,
-      "jsx": true,
-      "spread": true
+      "jsx": false
     },
-    "ecmaVersion": 8,
+    "ecmaVersion": 10,
     "sourceType": "module"
   },
   "plugins": [
@@ -76,6 +76,7 @@
         "before": true
       }
     ],
+    "key-spacing": 0,
     "block-scoped-var": 1,
     "callback-return": 1,
     "camelcase": 1,
@@ -102,7 +103,7 @@
     "eol-last": 2,
     "filenames/match-exported": 1,
     "filenames/match-regex": 0,
-    "filenames/no-index": 0,
+    "filenames/no-index": 1,
     "for-direction": 2,
     "func-name-matching": 1,
     "func-names": 0,
@@ -122,7 +123,10 @@
       "^(err|error)$"
     ],
     "implicit-arrow-linebreak": 1,
-    "indent": 1,
+    "indent": [
+      1,
+      2
+    ],
     "init-declarations": 0,
     "linebreak-style": 0,
     "lines-around-comment": [
@@ -381,6 +385,7 @@
     "no-void": 2,
     "no-warning-comments": 0,
     "no-with": 2,
+    "node/no-unsupported-features/es-syntax": 0,
     "node/shebang": 0,
     "object-curly-newline": 0,
     "object-curly-spacing": 1,
@@ -493,12 +498,12 @@
           "virtual": "abstract",
           "yield": "yields"
         },
+
         "preferType": {
-          "Boolean": "boolean",
           "Number": "number",
-          "Object": "Record<string,*>",
           "String": "string",
           "array": "Array",
+          "Boolean": "boolean",
           "date": "Date",
           "map": "Map",
           "object": "Record<string,*>",

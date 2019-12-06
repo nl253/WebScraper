@@ -2,8 +2,8 @@
   "name": "simple-webscraper",
   "version": "1.5.6",
   "description": "Web scraping toolkit",
-  "readme": "https://github.com/nl253/WebScraper/blob/master/README.md",
-  "homepage": "https://github.com/nl253/WebScraper/blob/master/README.md",
+  "readme": "https://nl253.github.io/WebScraper/index.html",
+  "homepage": "https://github.com/nl253/WebScraper",
   "keywords": [
     "http",
     "async",
@@ -19,6 +19,7 @@
     "url": "https://github.com/nl253/WebScraper"
   },
   "bugs": {
+    "email": "norbertlogiewa96@gmail.com",
     "url": "https://github.com/nl253/WebScraper/issues"
   },
   "author": "Norbert Logiewa <norbertlogiewa96@gmail.com>",
@@ -80,9 +81,11 @@
     "lib": "./"
   },
   "files": [
+    "README.md",
     "*.js",
     "exporting/*.js"
   ],
+  "private": false,
   "remarkConfig": {
     "plugins": [
       "remark-preset-lint-recommended",
@@ -90,16 +93,15 @@
       "remark-preset-lint-consistent"
     ]
   },
-  "private": false,
   "scripts": {
-    "example": "node examples/jobsite.js",
-    "example-2": "node examples/gh.js",
     "test": "npx jest",
-    "doc": "echo -e 'GENERATING DOCS\\n'; rm -rf ./docs; npx jsdoc -d ./docs -R ./README.md ./*.js ./exporting/*.js",
-    "doc:publish": "echo -e 'PUBLISHING DOCS\\n'; npm run doc; git add ./docs; git commit -am 'Update docs' -n; npm version patch; git push",
-    "doc:open": "npm run doc; $BROWSER ./docs/index.html",
-    "loc": "tokei -- $(git ls-files | grep -E '\\.js$' | grep -v docs | grep -v bin)",
+    "doc": "echo -e 'GENERATING DOCS\\n' && rm -rf ./docs && npx jsdoc -d ./docs -R ./README.md ./*.js ./exporting/*.js",
+    "doc:publish": "echo -e 'PUBLISHING DOCS\\n' && npm run doc && git add ./docs && git commit -am 'Update docs' -n && git push",
+    "doc:open": "npm run doc && $BROWSER ./docs/index.html",
+    "loc": "tokei -- $(git ls-files | grep -v docs | grep -v bin)",
     "lint": "npx eslint *.js",
-    "prepublishOnly": "npm run doc:publish"
+    "prepublishOnly": "npm run doc:publish",
+    "example": "node examples/jobsite.js",
+    "example-2": "node examples/gh.js"
   }
 }
