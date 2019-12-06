@@ -62,7 +62,7 @@
 <li>extensible</li>
 </ul>
 <h2>API</h2>
-<p>Docs in <a href="https://nl253.github.io/WebScraper/">gh-pages</a>.</p>
+<p>Docs in <a href="https://nl253.github.io/WebScraper/">gh-pages</a></p>
 <pre class="prettyprint source lang-js"><code>const startURL = &quot;https://stackoverflow.com/questions/...&quot;;
 const crawler = new Spider(startURL);
 crawler.setRespSecW8(20)
@@ -75,19 +75,20 @@ crawler.setRespSecW8(20)
        .setTimeLimit(120) // sec
        .setThreadCount(8) // #workers
        .setSiteCount(100) // distinct URLs
-       // run returns void, you might want to provide an export function for each result (see below)
+       // run returns void, you might want to provide
+       // an export function for each result (see below)
        // by default goes to sqlite ./db and prints to console
-       .run(); 
+       .run();
 </code></pre>
-<p>OR use init object in the constructor</p>
+<p>OR use init object in the constructor:</p>
 <pre class="prettyprint source lang-js"><code>// DEFAULT init options
 const spiderOpts = {
   // Function&lt;String, String, String, Promise>
   exportFunct: exports.combine(exports.console(), exports.sqlite()),
   // predicate i.e. Function&lt;String, Boolean>
-  filterFunct: (txt) => true, 
+  filterFunct: (txt) => true,
   // Array&lt;String>
-  followSelectors: [], 
+  followSelectors: [],
   // String
   logInfoFile: undefined, // logging goes to console
   // String
@@ -97,7 +98,7 @@ const spiderOpts = {
   // Integer
   respSecW8: 10,
   // Array&lt;String>
-  selectors: [], 
+  selectors: [],
   // Integer
   resultCount: 100,
   // Integer
@@ -126,76 +127,75 @@ crawler.setRespSecW8(20)
        .setSiteCount(100) // distinct URLs
        // run returns void, you might want to provide an export function for each result (see below)
        // by default goes to sqlite ./db and prints to console
-       .run(); 
+       .run();
 </code></pre>
 <p>See export functions below to save results.</p>
 <h2>Export Function</h2>
 <p>Must be of type <code>(uri: string, selector: string, text: string) =&gt; Promise&lt;*&gt;</code>.
-There is a few configurable export functions that you can use:</p>
+There are configurable export functions that you can use:</p>
 <p>Import the exporting module:</p>
 <pre class="prettyprint source lang-js"><code>const { exporting, Spider }  = require('simple-webscraper');
 </code></pre>
 <p>Declare a spider:</p>
 <pre class="prettyprint source lang-js"><code>const spider = new Spider(uri, { /* opts */ });
+spider.setExportFunct(myExport)
 </code></pre>
+<p>where <code>myExport</code> is:</p>
 <ul>
 <li>
 <p><code>sqlite</code></p>
-<p>Generates a <code>Result</code> table with columns: <code>id INT</code>, <code>text TEXT</code>, <code>selector TEXT</code>, <code>uri TEXT</code> columns.</p>
-<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.sqlite()) // generate output db name
-      .run();
+<p>Generates a <code>Result</code> table with columns:</p>
+<ul>
+<li><code>id INT</code></li>
+<li><code>text TEXT</code></li>
+<li><code>selector TEXT</code></li>
+<li><code>uri TEXT</code></li>
+</ul>
+<p>columns.</p>
+<pre class="prettyprint source lang-js"><code> exporting.sqlite() // generate output db name
 </code></pre>
-<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.sqlite('my-database.sqlite'))
-      .run();
+<pre class="prettyprint source lang-js"><code>exporting.sqlite('my-database.sqlite')
 </code></pre>
 </li>
 <li>
 <p><code>console</code></p>
-<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.console()) // default formatter
-      .run();
+<pre class="prettyprint source lang-js"><code>exporting.console() // default formatter
 </code></pre>
-<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.console('%s :: %s => %s')) // string formatter for (uri, selector, text)
-      .run();
+<pre class="prettyprint source lang-js"><code>exporting.console('%s :: %s => %s') // string formatter for (uri, selector, text)
 </code></pre>
-<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.console((uri, selector, text) => `${uri} :: ${text.slice(0, 100)}`))
-      .run();
+<pre class="prettyprint source lang-js"><code>exporting.console((uri, selector, text) => `${uri} :: ${text.slice(0, 100)}`))
 </code></pre>
 </li>
 <li>
 <p><code>file</code></p>
-<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.file()) // default file name, default formatter
-      .run();
+<pre class="prettyprint source lang-js"><code>exporting.file() // default file name, default formatter
 </code></pre>
-<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.file('results.csv')) // custom file name, default csv formatter
-      .run();
+<pre class="prettyprint source lang-js"><code>exporting.file('results.csv') // custom file name, default csv formatter
 </code></pre>
-<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.file('results.log', 'INFO %s, %s, %s')) // custom file name, string formatter
-      .run();
+<pre class="prettyprint source lang-js"><code>exporting.file('results.log', 'INFO %s, %s, %s') // custom file name, string formatter
 </code></pre>
-<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.file('results.log', (uri, selector, text) => `${uri} :: ${text.slice(0, 100)}`))
-      .run();
+<pre class="prettyprint source lang-js"><code>exporting.file('results.log', (uri, selector, text) => `${uri} :: ${text.slice(0, 100)}`)
 </code></pre>
 </li>
 <li>
-<p><code>combine</code> (used to broadcast results to many exports)</p>
-<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.combine(
-    exporting.sqlite(), 
-    exporting.console(), 
-    exporting.file(),
-  )).run();
+<p><code>combine</code> (used to broadcast results to more than one exports)</p>
+<pre class="prettyprint source lang-js"><code>exporting.combine(
+  exporting.sqlite(),
+  exporting.console(),
+  exporting.file(),
+)
 </code></pre>
 </li>
 <li>
 <p><code>db</code></p>
-<pre class="prettyprint source lang-js"><code>spider.setExportFunct(exporting.db(dbURI)) // look at sequelize docs
-      .run();
+<pre class="prettyprint source lang-js"><code>exporting.db(dbURI) // look at sequelize docs
 </code></pre>
 </li>
 <li>
 <p><code>default</code> (enabled by default, sends to console, CSV file and sqlite database)</p>
 </li>
 </ul>
-<p>It's <strong>very</strong> easy to define your own export function. E.g. imagine wanting to POST each result to some 3rd party API.</p>   
+<p>It's easy to define your own export function. E.g. imagine wanting to POST each result to some 3rd party API.</p>
 <pre class="prettyprint source lang-js"><code>const myExportFunction = async (uri, selector, text) => {
   const res = await http.post(myURI, { uri, selector, text });
   return;
@@ -205,23 +205,22 @@ There is a few configurable export functions that you can use:</p>
 <p>More examples in <code>./examples</code>.</p>
 <pre class="prettyprint source lang-js"><code>const { Spider, exporting } = require('simple-webscraper');
 
-(async function() {
-  const s = new Spider('https://www.jobsite.co.uk/jobs/javascript');
+const s = new Spider('https://www.jobsite.co.uk/jobs/javascript');
 
-  const sqliteExport = await exporting.sqlite('./db', true /* force wipe if exists */);
+const sqliteExport =
+      await exporting.sqlite('./db', true /* force wipe if exists */);
 
-  s.setExportFunct(sqliteExport)
-   .appendSelector(&quot;.job > .row > .col-sm-12&quot;)
-    // don't look for jobs in London, make sure they are graduate!
-   .setFilterFunct(txt => !!txt.match('raduate') && !txt.match('London'))
-    // next page 
-   .appendFollowSelector(&quot;.results-footer-links-container ul.pagination li a[href*='page=']&quot;) 
-    // stop after 3 websites (urls)
-   .setSiteCount(3)
-    // run for 30 sec
-   .setTimeLimit(30)
-   .run();
-})();
+s.setExportFunct(sqliteExport)
+ .appendSelector(&quot;.job > .row > .col-sm-12&quot;)
+ // don't look for jobs in London, make sure they are graduate!
+ .setFilterFunct(txt => !!txt.match('raduate') && !txt.match('London'))
+ // next page
+ .appendFollowSelector(&quot;.results-footer-links-container ul.pagination li a[href*='page=']&quot;)
+ // stop after 3 websites (urls)
+ .setSiteCount(3)
+ // run for 30 sec
+ .setTimeLimit(30)
+ .run();
 </code></pre></article>
     </section>
 
@@ -239,7 +238,7 @@ There is a few configurable export functions that you can use:</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Dec 04 2019 18:53:12 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 06 2019 19:25:07 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>
