@@ -13,7 +13,7 @@ jobs:
       max-parallel: 4
       fail-fast: true
       matrix:
-        node: ['12', '10', '8']
+        node: ['12', '10']
         os: [windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
