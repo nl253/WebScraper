@@ -4,7 +4,7 @@ let cacheDB;
 
 /**
  * @param {string} connectionStr
- * @param {Partial<sequelize.Options>} [dbOpts]
+ * @param {Partial<Options>} [dbOpts]
  * @returns {Promise<sequelize.Sequelize>}
  * @private
  */
@@ -31,8 +31,8 @@ let cacheResultTbl;
 /**
  * @param {sequelize.Sequelize} db
  * @param {boolean} [doSync]
- * @param {Partial<sequelize.ModelOptions>} [modelOpts]
- * @returns {Promise<sequelize.Model>}
+ * @param {Partial<ModelOptions>} [modelOpts]
+ * @returns {Promise<Model>}
  * @private
  */
 const getResultTbl = async (db, doSync = false, modelOpts = {}) => {
@@ -67,8 +67,8 @@ const getResultTbl = async (db, doSync = false, modelOpts = {}) => {
 /**
  * @param {string} connectionStr
  * @param {boolean} [doSync]
- * @param {Partial<sequelize.Options>} [dbOpts]
- * @param {Partial<sequelize.ModelOptions>} [modelOpts]
+ * @param {Partial<Options>} [dbOpts]
+ * @param {Partial<ModelOptions>} [modelOpts]
  * @returns {ExportFunct}
  */
 const dbExport = (connectionStr, doSync = false, dbOpts = {}, modelOpts = {}) => async (uri, selector, text) => (await getResultTbl(await getDB(connectionStr, dbOpts), doSync, modelOpts)).create({ text, selector, uri });

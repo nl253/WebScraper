@@ -6,7 +6,7 @@ const dbExport = require('./db');
  * @param {string} [dbPath]
  * @param {boolean} [doSync]
  * @param {Partial<sequelize.Options>} [dbOpts]
- * @param {Partial<sequelize.ModelOptions>} [modelOpts]
+ * @param {Partial<ModelOptions>} [modelOpts]
  * @returns {ExportFunct}
  */
 const sqliteExport = (dbPath, doSync = false, dbOpts = {}, modelOpts = {}) => {
@@ -15,7 +15,8 @@ const sqliteExport = (dbPath, doSync = false, dbOpts = {}, modelOpts = {}) => {
     `sqlite:${p}`,
     doSync || !existsSync(p),
     { dialect: 'sqlite', ...dbOpts },
-    modelOpts);
+    modelOpts,
+  );
 };
 
 module.exports = sqliteExport;

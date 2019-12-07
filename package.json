@@ -96,7 +96,7 @@
   "scripts": {
     "example:1": "node examples/jobsite.js",
     "example:2": "node examples/gh.js",
-    "test": "npx jest",
+    "test": "npx jest --ci",
     "doc": "bash -c \"echo -e 'GENERATING DOCS\\n' && rm -rf ./docs && npx jsdoc --pedantic -d ./docs -R ./README.md ./exporting/*.js ./*.js\"",
     "doc:open": "bash -c \"npm run doc && $BROWSER ./docs/index.html\"",
     "doc:publish": "bash -c \"echo -e 'PUBLISHING DOCS\\n' && npm run doc && git add -f ./docs && git commit -am 'Update docs' -n && git push\"",
