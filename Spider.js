@@ -6,14 +6,15 @@ const cheerio = require('cheerio');
 const fetch   = require('node-fetch');
 
 const exporting = require('./exporting');
-
-// eslint-disable-next-line optimize-regex/optimize-regex
-const REGEX_URI         = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
-const REGEX_SANITISE_NL = /\n{2,}/g;
-const REGEX_SANITISE    = /\s{2,}\n+|\n{2,}\s+/g;
-const REGEX_SANITISE_WS = /\s{2,}/g;
-
-const SEC = 1000;
+const { sleep } = require('./utils');
+const {
+  REGEX_SANITISE,
+  REGEX_SANITISE_NL,
+  REGEX_SANITISE_WS,
+  REGEX_URI,
+  LoggingLevel,
+  SEC,
+} = require('./contants');
 
 /**
  * @callback PreProcessFunct
@@ -32,15 +33,6 @@ const SEC = 1000;
  * @param {string} text
  * @returns {boolean}
  */
-
-/**
- * Sleeps for sec seconds.
- *
- * @private
- * @param {number} sec
- * @returns {Promise<void>}
- */
-const sleep = (sec) => new Promise((resolve, reject) => setTimeout(resolve, sec * SEC));
 
 class Spider {
   /**
@@ -88,8 +80,8 @@ class Spider {
     this.threadCount = opts.threadCount || 4;
     this.timeLimit = opts.timeLimit || 60;
 
-    this._logInfo = this._initLogToFile(opts.logInfoFile, 'info');
-    this._logErr = this._initLogToFile(opts.logErrFile, 'error');
+    this._logInfo = this._initLogToFile(opts.logInfoFile, LoggingLevel.Info);
+    this._logErr = this._initLogToFile(opts.logErrFile, LoggingLevel.Error);
   }
 
   /**
@@ -117,18 +109,23 @@ class Spider {
   /**
    * @param {?string} fName
    * @param {'info'|'error'} lvl
-   * @returns {function(...string): void}
+   * @returns {function(...*): void}
    * @private
    */
-  _initLogToFile(fName, lvl = 'info') {
+  _initLogToFile(fName, lvl = LoggingLevel.Info) {
     if (!fName) {
       return this._initLogToFile(`log-${new Date().toISOString().replace(/\W+/g, '-')}.log`);
     }
     const stream = createWriteStream(fName);
-    return (msg) => {
+    /**
+     * @param {...*} msg
+     */
+    return (...msg) => {
       stream.write(lvl.toUpperCase());
       stream.write(' ');
-      stream.write(msg.toString());
+      for (const m of msg) {
+        stream.write(m.toString());
+      }
       stream.write('\n');
     };
   }
@@ -240,7 +237,7 @@ class Spider {
    * @returns {Spider}
    */
   setLogInfoFile(fName) {
-    this._logInfo = this._initLogToFile(fName, 'info');
+    this._logInfo = this._initLogToFile(fName, LoggingLevel.Info);
     return this;
   }
 
@@ -249,7 +246,7 @@ class Spider {
    * @returns {Spider}
    */
   setLogErrFile(fName) {
-    this._logErr = this._initLogToFile(fName, 'error');
+    this._logErr = this._initLogToFile(fName, LoggingLevel.Error);
     return this;
   }
 
