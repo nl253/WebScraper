@@ -117,6 +117,7 @@ class Spider {
       return this._initLogToFile(`log-${new Date().toISOString().replace(/\W+/g, '-')}.log`);
     }
     const stream = createWriteStream(fName);
+
     /**
      * @param {...*} msg
      */
