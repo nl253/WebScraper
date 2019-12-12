@@ -57,6 +57,8 @@ class Spider {
    * @param {number} [opts.respSecW8]
    * @param {string[]} [opts.selectors]
    * @param {number} [opts.resultCount]
+   * @param {boolean} [opts.crossOrigin]
+   * @param {boolean} [opts.crossHost]
    * @param {number} [opts.siteCount]
    * @param {number} [opts.threadCount]
    * @param {number} [opts.timeLimit]
@@ -75,6 +77,8 @@ class Spider {
     this.postProcessTextFunct = opts.postProcessTextFunct || ((text) => text);
     this.preProcessTextFunct = opts.preProcessTextFunct || ((text) => text.replace(REGEX_SANITISE_WS, ' ').replace(REGEX_SANITISE, '').replace(REGEX_SANITISE_NL, '\n'));
     this.filterFunct = opts.filterFunct || ((text) => true);
+    this.crossOrigin = opts.crossOrigin || true;
+    this.crossHost = opts.crossHost || true;
     this.followSelectors = opts.followSelectors || [];
     this.redirFollowCount = opts.redirFollowCount || 3;
     this.respSecW8 = opts.respSecW8 || 10;
@@ -164,6 +168,18 @@ class Spider {
    * @returns {Spider}
    */
   setThreadCount(n) { return this._set('threadCount', n); }
+
+  /**
+   * @param {boolean} b
+   * @returns {Spider}
+   */
+  setCrossOrigin(b) { return this._set('crossOrigin', b); }
+
+  /**
+   * @param {boolean} b
+   * @returns {Spider}
+   */
+  setCrossHost(b) { return this._set('crossHost', b); }
 
   /**
    * @param {ExportFunct} f
@@ -351,13 +367,24 @@ class Spider {
     $(this.followSelector).each((idx, elem) => {
       // eslint-disable-next-line node/no-deprecated-api
       const resolved = url.resolve(focusURI, $(elem).attr('href'));
+      this._logInfo(`resolved URI: ${resolved}`);
       if (!this._seen.has(resolved)) {
         if (REGEX_URI.test(resolved)) {
-          this._logInfo(`new URI: ${resolved}`);
-          this._queue.push(resolved);
+          if (this.crossOrigin || new URL(resolved).origin === new URL(focusURI).origin) {
+            if (this.crossHost || new URL(resolved).host === new URL(focusURI).host) {
+              this._logInfo(`adding resolved URI to queue`);
+              this._queue.push(resolved);
+            } else {
+              this._logInfo(`resolved URI wasn't added because it was cross-host`);
+            }
+          } else {
+            this._logInfo(`resolved URI wasn't added because it was cross-origin`);
+          }
         } else {
-          this._logInfo(`resolved URI wasn't valid (${resolved})`);
+          this._logInfo(`resolved URI wasn't valid`);
         }
+      } else {
+        this._logInfo(`resolved URI already seen`);
       }
     });
 
