@@ -46,7 +46,8 @@
     "cheerio": "^1.0.0-rc.3",
     "node-fetch": "^2.6.0",
     "sequelize": "^5.21.2",
-    "sqlite3": "^4.0.0"
+    "sqlite3": "^4.0.0",
+    "snyk": "^1.319.0"
   },
   "devDependencies": {
     "eslint": "^6.7.1",
@@ -111,6 +112,9 @@
     "lint:deps:security": "npx retire --js",
     "lint:deps:license": "npx license-checker --summary",
     "loc": "bash -c \"tokei -- $(git ls-files | grep -v docs | grep -v bin)\"",
-    "prepublishOnly": "npm run doc:publish"
-  }
+    "prepublishOnly": "npm run doc:publish",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
+  },
+  "snyk": true
 }
